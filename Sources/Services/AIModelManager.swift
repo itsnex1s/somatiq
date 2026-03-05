@@ -48,7 +48,7 @@ enum AIModelError: LocalizedError, Equatable {
 }
 
 actor AIModelManager {
-    private static let modelRepo = "mlx-community/Qwen3-8B-4bit"
+    private static let modelRepo = "mlx-community/Qwen3.5-9B-MLX-4bit"
     private static let modelName = "Qwen 3.5 9B"
     private static let preparedDefaultsKey = "somatiq.ai.qwen9.prepared"
 
@@ -72,7 +72,13 @@ actor AIModelManager {
                 errorText: nil
             )
         } else {
-            status = .initial
+            status = AIModelStatus(
+                phase: .notDownloaded,
+                progress: 0,
+                title: Self.modelName,
+                detail: "Download once to run private on-device AI chat.",
+                errorText: nil
+            )
         }
     }
 
@@ -119,14 +125,14 @@ actor AIModelManager {
         let task = Task<Void, Error> {
             do {
                 if hasPreparedBefore {
-                    await updateStatus(
+                    updateStatus(
                         phase: .preparing,
                         progress: 0.05,
                         detail: "Preparing local runtime...",
                         errorText: nil
                     )
                 } else {
-                    await updateStatus(
+                    updateStatus(
                         phase: .downloading,
                         progress: 0.03,
                         detail: "Downloading Qwen 3.5 9B...",
@@ -142,7 +148,7 @@ actor AIModelManager {
                     }
                 }
 
-                await updateStatus(
+                updateStatus(
                     phase: .preparing,
                     progress: 0.94,
                     detail: "Preparing tokenizer and context...",
@@ -170,7 +176,7 @@ actor AIModelManager {
                     try Task.checkCancellation()
                     try await Task.sleep(for: .milliseconds(160))
                     progress += 0.05
-                    await updateStatus(
+                    updateStatus(
                         phase: hasPreparedBefore ? .preparing : .downloading,
                         progress: min(progress, 0.92),
                         detail: hasPreparedBefore ? "Preparing local runtime..." : "Downloading Qwen 3.5 9B...",
@@ -180,14 +186,14 @@ actor AIModelManager {
 #endif
 
                 UserDefaults.standard.set(true, forKey: Self.preparedDefaultsKey)
-                await updateStatus(
+                updateStatus(
                     phase: .ready,
                     progress: 1,
                     detail: "Model is ready.",
                     errorText: nil
                 )
             } catch is CancellationError {
-                await updateStatus(
+                updateStatus(
                     phase: requiresInitialDownload() ? .notDownloaded : .failed,
                     progress: 0,
                     detail: "Preparation cancelled.",
@@ -195,7 +201,7 @@ actor AIModelManager {
                 )
                 throw AIModelError.generationCancelled
             } catch {
-                await updateStatus(
+                updateStatus(
                     phase: .failed,
                     progress: 0,
                     detail: "Could not prepare model.",

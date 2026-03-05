@@ -7,11 +7,11 @@ final class DailyScore {
 
     var stressScore: Int
     var sleepScore: Int
-    var energyScore: Int
+    var bodyBatteryScore: Int
 
     var stressLevel: String
     var sleepLevel: String
-    var energyLevel: String
+    var bodyBatteryLevel: String
 
     var createdAt: Date
     var updatedAt: Date
@@ -32,63 +32,7 @@ final class DailyScore {
     var scoreConfidence: Double?
     var qualityReason: String?
 
-    var bodyBatteryScore: Int {
-        get { energyScore }
-        set { energyScore = newValue }
-    }
-
-    var bodyBatteryLevel: String {
-        get { energyLevel }
-        set { energyLevel = newValue }
-    }
-
     init(
-        date: Date,
-        stressScore: Int = 0,
-        sleepScore: Int = 0,
-        energyScore: Int = 0,
-        stressLevel: String = "unknown",
-        sleepLevel: String = "unknown",
-        energyLevel: String = "unknown",
-        sleepDurationMin: Double = 0,
-        sleepEfficiency: Double = 0,
-        deepSleepMin: Double = 0,
-        remSleepMin: Double = 0,
-        coreSleepMin: Double = 0,
-        bedtimeAt: Date? = nil,
-        avgSDNN: Double = 0,
-        restingHR: Double = 0,
-        activeCalories: Double = 0,
-        steps: Int = 0,
-        insightText: String = "",
-        scoreConfidence: Double? = nil,
-        qualityReason: String? = nil
-    ) {
-        self.date = date.startOfDay
-        self.stressScore = stressScore
-        self.sleepScore = sleepScore
-        self.energyScore = energyScore
-        self.stressLevel = stressLevel
-        self.sleepLevel = sleepLevel
-        self.energyLevel = energyLevel
-        self.createdAt = Date()
-        self.updatedAt = Date()
-        self.sleepDurationMin = sleepDurationMin
-        self.sleepEfficiency = sleepEfficiency
-        self.deepSleepMin = deepSleepMin
-        self.remSleepMin = remSleepMin
-        self.coreSleepMin = coreSleepMin
-        self.bedtimeAt = bedtimeAt
-        self.avgSDNN = avgSDNN
-        self.restingHR = restingHR
-        self.activeCalories = activeCalories
-        self.steps = steps
-        self.insightText = insightText
-        self.scoreConfidence = scoreConfidence
-        self.qualityReason = qualityReason
-    }
-
-    convenience init(
         date: Date,
         stressScore: Int = 0,
         sleepScore: Int = 0,
@@ -110,27 +54,27 @@ final class DailyScore {
         scoreConfidence: Double? = nil,
         qualityReason: String? = nil
     ) {
-        self.init(
-            date: date,
-            stressScore: stressScore,
-            sleepScore: sleepScore,
-            energyScore: bodyBatteryScore,
-            stressLevel: stressLevel,
-            sleepLevel: sleepLevel,
-            energyLevel: bodyBatteryLevel,
-            sleepDurationMin: sleepDurationMin,
-            sleepEfficiency: sleepEfficiency,
-            deepSleepMin: deepSleepMin,
-            remSleepMin: remSleepMin,
-            coreSleepMin: coreSleepMin,
-            bedtimeAt: bedtimeAt,
-            avgSDNN: avgSDNN,
-            restingHR: restingHR,
-            activeCalories: activeCalories,
-            steps: steps,
-            insightText: insightText,
-            scoreConfidence: scoreConfidence,
-            qualityReason: qualityReason
-        )
+        self.date = date.startOfDay
+        self.stressScore = stressScore
+        self.sleepScore = sleepScore
+        self.bodyBatteryScore = bodyBatteryScore
+        self.stressLevel = stressLevel
+        self.sleepLevel = sleepLevel
+        self.bodyBatteryLevel = bodyBatteryLevel
+        self.createdAt = Date()
+        self.updatedAt = Date()
+        self.sleepDurationMin = sleepDurationMin
+        self.sleepEfficiency = sleepEfficiency
+        self.deepSleepMin = deepSleepMin
+        self.remSleepMin = remSleepMin
+        self.coreSleepMin = coreSleepMin
+        self.bedtimeAt = bedtimeAt
+        self.avgSDNN = avgSDNN
+        self.restingHR = restingHR
+        self.activeCalories = activeCalories
+        self.steps = steps
+        self.insightText = insightText
+        self.scoreConfidence = scoreConfidence
+        self.qualityReason = qualityReason
     }
 }

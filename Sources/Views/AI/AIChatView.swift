@@ -11,7 +11,7 @@ struct AIChatView: View {
     private let bottomSentinelId = "ai-chat-bottom"
 
     init(
-        dashboardService: DashboardDataService,
+        healthContextProvider: any AIHealthContextProviding,
         conversationStore: AIConversationStore,
         modelManager: AIModelManager,
         chatService: AIChatService
@@ -21,7 +21,7 @@ struct AIChatView: View {
                 store: conversationStore,
                 modelManager: modelManager,
                 chatService: chatService,
-                dashboardService: dashboardService
+                healthContextProvider: healthContextProvider
             )
         )
     }
@@ -56,7 +56,7 @@ struct AIChatView: View {
             if pendingNewMessages > 0 {
                 Button {
                     pendingNewMessages = 0
-                    NotificationCenter.default.post(name: Notification.Name("somatiq.ai.scrollToBottom"), object: nil)
+                    NotificationCenter.default.post(name: .aiScrollToBottom, object: nil)
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.down")
@@ -145,7 +145,7 @@ struct AIChatView: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(SomatiqColor.textPrimary)
 
-                Text("Download Qwen 3.5 9B once (~5.2 GB). After setup, chat runs locally on your device.")
+                Text("Download \(viewModel.modelStatus.title) once. After setup, chat runs locally on your device.")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(SomatiqColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -259,7 +259,7 @@ struct AIChatView: View {
                     pendingNewMessages += (newCount - oldCount)
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("somatiq.ai.scrollToBottom"))) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .aiScrollToBottom)) { _ in
                 withAnimation(reduceMotion ? .linear(duration: 0.08) : SomatiqAnimation.sectionReveal) {
                     proxy.scrollTo(bottomSentinelId, anchor: .bottom)
                 }
@@ -358,14 +358,14 @@ struct AIChatView: View {
         case .ready:
             return "Ready"
         case .notDownloaded:
-            return "Download Qwen 3.5 9B"
+            return "Download \(viewModel.modelStatus.title)"
         }
     }
 
     private var modelStatusLine: String {
         switch viewModel.modelStatus.phase {
         case .ready:
-            return "Qwen 3.5 9B • Ready"
+            return "\(viewModel.modelStatus.title) • Ready"
         case .downloading:
             return "Downloading model..."
         case .preparing:

@@ -9,20 +9,22 @@ final class AppDependencies {
     let aiModelManager: AIModelManager
     let aiChatService: AIChatService
     let aiConversationStore: AIConversationStore
+    let aiHealthContextService: AIHealthContextService
 
     init(
         modelContext: ModelContext,
         healthDataProvider: any HealthDataProviding = HealthKitService()
     ) {
         self.healthDataProvider = healthDataProvider
-        aiModelManager = AIModelManager()
-        aiChatService = AIChatService(modelManager: aiModelManager)
-        aiConversationStore = AIConversationStore()
         dashboardService = DashboardDataService(
             context: modelContext,
             healthDataProvider: healthDataProvider,
             reportNotifier: LocalReportNotificationService()
         )
+        aiHealthContextService = AIHealthContextService(snapshotProvider: dashboardService)
+        aiModelManager = AIModelManager()
+        aiChatService = AIChatService(modelManager: aiModelManager)
+        aiConversationStore = AIConversationStore()
         trendsService = TrendsDataService(context: modelContext)
         settingsService = SettingsDataService(
             context: modelContext,

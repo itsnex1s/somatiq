@@ -49,7 +49,7 @@ struct RootTabView: View {
                     TrendsView(trendsService: dependencies.trendsService)
                 case .ai:
                     AIChatView(
-                        dashboardService: dependencies.dashboardService,
+                        healthContextProvider: dependencies.aiHealthContextService,
                         conversationStore: dependencies.aiConversationStore,
                         modelManager: dependencies.aiModelManager,
                         chatService: dependencies.aiChatService

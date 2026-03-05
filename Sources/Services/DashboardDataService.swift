@@ -35,7 +35,7 @@ private struct QualityEvaluation {
 }
 
 @MainActor
-final class DashboardDataService {
+final class DashboardDataService: DashboardSnapshotProviding {
     private let storage: StorageService
     private let baselineService: BaselineService
     private let healthDataProvider: any HealthDataProviding
@@ -72,6 +72,24 @@ final class DashboardDataService {
             todayScore = cached
         } else {
             todayScore = try await recalculateToday()
+        }
+
+        let weekScores = try storage.fetchDailyScores(days: 7)
+        let reports = try reportService.fetchRecentReports(limit: 180)
+        let baseline = try baselineService.baselineValue(for: .sdnn)
+        let isCalibrating = baseline == BaselineMetric.sdnn.populationDefault
+
+        return DashboardSnapshot(
+            today: todayScore,
+            weekScores: weekScores,
+            reports: reports,
+            isCalibrating: isCalibrating
+        )
+    }
+
+    func fetchCachedSnapshot() throws -> DashboardSnapshot? {
+        guard let todayScore = try storage.fetchDailyScore(on: Date()) else {
+            return nil
         }
 
         let weekScores = try storage.fetchDailyScores(days: 7)

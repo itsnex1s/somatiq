@@ -33,8 +33,7 @@
 ## v2.0 — AI Insights
 
 ### On-Device LLM
-- **Qwen3.5-0.8B** (4-bit, ~500MB) — default for all iPhones
-- **Qwen3.5-2B** (4-bit, ~1.1GB) — optional upgrade for Pro devices
+- **Qwen3.5-9B** (4-bit) — the only on-device chat model
 - Via MLX Swift, zero network calls
 
 ### Features

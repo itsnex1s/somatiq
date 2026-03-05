@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - "codex/**"
+  pull_request:
+
+jobs:
+  build-and-quality:
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build (iOS Simulator)
+        run: xcodebuild -scheme Somatiq -destination 'generic/platform=iOS Simulator' build
+
+      - name: Lightweight Quality Gate
+        run: bash scripts/quality_gate.sh

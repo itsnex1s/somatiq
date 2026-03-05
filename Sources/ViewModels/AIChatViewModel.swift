@@ -14,7 +14,7 @@ final class AIChatViewModel {
     private let store: AIConversationStore
     private let modelManager: AIModelManager
     private let chatService: AIChatService
-    private let dashboardService: DashboardDataService
+    private let healthContextProvider: any AIHealthContextProviding
 
     private var hasLoaded = false
     private var modelStatusTask: Task<Void, Never>?
@@ -23,12 +23,12 @@ final class AIChatViewModel {
         store: AIConversationStore,
         modelManager: AIModelManager,
         chatService: AIChatService,
-        dashboardService: DashboardDataService
+        healthContextProvider: any AIHealthContextProviding
     ) {
         self.store = store
         self.modelManager = modelManager
         self.chatService = chatService
-        self.dashboardService = dashboardService
+        self.healthContextProvider = healthContextProvider
     }
 
     func loadIfNeeded() async {
@@ -101,7 +101,7 @@ final class AIChatViewModel {
 
         do {
             let history = messages.filter { $0.id != assistantId }
-            let healthContext = await buildHealthContext()
+            let healthContext = await healthContextProvider.currentContext()
             let stream = try await chatService.generateResponseStream(
                 history: history,
                 userInput: trimmed,
@@ -167,29 +167,6 @@ final class AIChatViewModel {
             try store.saveMessages(normalized)
         } catch {
             AppLog.error("AIChatViewModel.persistMessages", error: error)
-        }
-    }
-
-    private func buildHealthContext() async -> String {
-        do {
-            let snapshot = try await dashboardService.fetchSnapshot(forceRecalculate: false)
-            let reports = snapshot.reports.prefix(4)
-            let reportText = reports.map { report in
-                "- \(report.createdAt.formatted(.dateTime.hour().minute())) \(report.headline): \(report.body)"
-            }.joined(separator: "\n")
-
-            return """
-            Today scores:
-            - Battery: \(snapshot.today.bodyBatteryScore)
-            - Stress: \(snapshot.today.stressScore)
-            - Sleep: \(snapshot.today.sleepScore)
-            - Heart: \(Int(snapshot.today.avgSDNN.rounded())) ms
-
-            Latest reports:
-            \(reportText.isEmpty ? "- none yet" : reportText)
-            """
-        } catch {
-            return "No reliable health context available right now."
         }
     }
 }

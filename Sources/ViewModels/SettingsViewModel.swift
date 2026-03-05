@@ -70,7 +70,7 @@ final class SettingsViewModel {
             case let .syncedWithData(lastSyncAt):
                 lastSyncText = format(date: lastSyncAt)
                 NotificationCenter.default.post(
-                    name: Notification.Name("somatiq.healthReconnectDidComplete"),
+                    name: .healthReconnectDidComplete,
                     object: nil
                 )
             case .connectedNoData:
