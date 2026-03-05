@@ -13,7 +13,7 @@ enum SleepLevel: String {
     case great
 }
 
-enum EnergyLevel: String {
+enum BatteryLevel: String {
     case depleted
     case low
     case good
@@ -30,9 +30,9 @@ struct SleepResult {
     let level: SleepLevel
 }
 
-struct EnergyResult {
+struct BatteryResult {
     let score: Int
-    let level: EnergyLevel
+    let level: BatteryLevel
     let delta: Double
 }
 
@@ -92,7 +92,7 @@ struct ScoreEngine {
         return SleepResult(score: total, level: level)
     }
 
-    func calculateEnergy(
+    func calculateBodyBattery(
         sleepData: SleepData,
         currentSDNN: Double,
         baselineSDNN: Double,
@@ -101,8 +101,10 @@ struct ScoreEngine {
         activeCalories: Double,
         steps: Int,
         wakeHours: Double,
-        previousEnergy: Double?
-    ) -> EnergyResult {
+        previousBattery: Double?,
+        sleepDebtHours: Double = 0,
+        overnightRecoveryBonus: Bool = false
+    ) -> BatteryResult {
         // HRV quality factor: how well-recovered you are
         let quality = Statistics.clamped(
             currentSDNN / max(baselineSDNN, 1),
@@ -123,36 +125,52 @@ struct ScoreEngine {
         let coreHours = sleepData.coreMinutes / 60
         let awakeHours = sleepData.awakeMinutes / 60
 
+        // Enhanced weights: Deep ×12, REM ×8 (research-backed)
         let sleepCharge =
-            (deepHours * 10 * quality * hrFactor) +
-            (remHours * 6 * quality * hrFactor) +
+            (deepHours * 12 * quality * hrFactor) +
+            (remHours * 8 * quality * hrFactor) +
             (coreHours * 4 * quality * hrFactor)
+
+        // Sleep debt penalty: rolling 3-day avg vs target, reduce charge up to 20%
+        let debtPenalty = sleepDebtHours > 1
+            ? Statistics.clamped(sleepDebtHours / 3.0 * 0.20, min: 0, max: 0.20)
+            : 0
+        let adjustedSleepCharge = sleepCharge * (1 - debtPenalty)
 
         // Restful wake: 2 pts/hr if HRV above baseline (relaxed wakefulness)
         let restfulWakeCharge = currentSDNN > baselineSDNN ? awakeHours * 2 : 0
 
+        // Overnight recovery bonus: +5 if SDNN >110% baseline AND RHR <95% baseline
+        let recoveryBonus: Double = overnightRecoveryBonus ? 5 : 0
+
         // DRAIN: activity + stress + baseline metabolic
         let calorieDrain = activeCalories / 500 * 5
 
-        // Stress drain: 1-5 pts/hr scaled by HR elevation above baseline
-        let hrElevation = Statistics.clamped(
-            (currentRHR - baselineRHR) / max(baselineRHR, 1),
+        // Smarter stress drain: use HRV deviation directly
+        let safeBaselineSDNN = max(baselineSDNN, 1)
+        let hrvDeviation = Statistics.clamped(
+            (safeBaselineSDNN - currentSDNN) / safeBaselineSDNN,
             min: 0,
-            max: 0.3
+            max: 0.5
         )
-        let stressDrainRate = 1 + (hrElevation / 0.3) * 4  // 1-5 pts/hr
+        let stressDrainRate = 1 + (hrvDeviation / 0.5) * 4  // 1-5 pts/hr
         let stressDrain = stressDrainRate * max(wakeHours, 0)
 
-        let totalCharge = sleepCharge + restfulWakeCharge
-        let totalDrain = calorieDrain + stressDrain
+        // Prolonged wake drain: after 14+ hours awake, +1 pt/hr extra per hour beyond 14
+        let prolongedWakeDrain = wakeHours > 14
+            ? (wakeHours - 14) * 1
+            : 0
 
-        let startLevel = previousEnergy ?? 50
+        let totalCharge = adjustedSleepCharge + restfulWakeCharge + recoveryBonus
+        let totalDrain = calorieDrain + stressDrain + prolongedWakeDrain
+
+        let startLevel = previousBattery ?? 50
         let updated = Statistics.clamped(startLevel + totalCharge - totalDrain, min: 0, max: 100)
 
         let score = Statistics.clampedInt(updated, min: 0, max: 100)
-        let level = energyLevel(for: score)
+        let level = batteryLevel(for: score)
         let delta = updated - startLevel
-        return EnergyResult(score: score, level: level, delta: delta)
+        return BatteryResult(score: score, level: level, delta: delta)
     }
 
     private func percentage(part: Double, total: Double) -> Double {
@@ -247,7 +265,7 @@ struct ScoreEngine {
         }
     }
 
-    private func energyLevel(for score: Int) -> EnergyLevel {
+    private func batteryLevel(for score: Int) -> BatteryLevel {
         switch score {
         case 0 ... 25:
             return .depleted

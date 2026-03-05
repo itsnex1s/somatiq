@@ -14,6 +14,7 @@ final class DashboardDataService {
     private let healthDataProvider: any HealthDataProviding
     private let scoreEngine: ScoreEngine
     private let insightGenerator: InsightGenerator
+    private let hrvLookbackWindows = [24, 72, 168]
 
     init(
         context: ModelContext,
@@ -58,13 +59,13 @@ final class DashboardDataService {
     ) async throws -> DailyScore {
         try await calculateAndPersistTodayScore(
             requestAuthorization: requestAuthorization,
-            energySource: energySource
+            batterySource: energySource
         )
     }
 
     private func calculateAndPersistTodayScore(
         requestAuthorization: Bool,
-        energySource: String
+        batterySource: String
     ) async throws -> DailyScore {
         if requestAuthorization {
             try await healthDataProvider.requestAuthorization()
@@ -73,15 +74,21 @@ final class DashboardDataService {
         let preferences = try storage.fetchPreferences()
         let targetSleepHours = preferences.targetSleepHours
 
-        let hrvSamples = try await healthDataProvider.queryHRV(last: 24)
-        guard let avgSDNN = Statistics.mean(hrvSamples.map(\.sdnn)), avgSDNN > 0 else {
-            throw HealthKitError.noData
-        }
+        let avgSDNN = try await resolveAverageSDNN()
 
-        let restingHR = try await healthDataProvider.queryRestingHR() ?? BaselineMetric.restingHR.populationDefault
+        guard let restingHR = try await healthDataProvider.queryRestingHR(), restingHR > 0 else {
+            throw HealthKitError.noRecentWatchData
+        }
         let sleep = try await healthDataProvider.querySleep(for: Date())
         let calories = try await healthDataProvider.queryActiveEnergy(for: Date())
         let steps = try await healthDataProvider.querySteps(for: Date())
+
+        if avgSDNN <= 0,
+           sleep.totalSleepMinutes <= 0,
+           calories <= 0,
+           steps <= 0 {
+            throw HealthKitError.noRecentWatchData
+        }
 
         let baselineSDNN = try baselineService.baselineValue(for: .sdnn)
         let baselineRHR = try baselineService.baselineValue(for: .restingHR)
@@ -104,7 +111,7 @@ final class DashboardDataService {
             targetHours: targetSleepHours
         )
 
-        let previousEnergy = try storage.latestEnergyReading()?.level
+        let previousBattery = try storage.latestBatteryReading()?.level
         let wakeHours: Double
         if let sleepEnd = sleep.inBedEnd {
             wakeHours = max(Date().timeIntervalSince(sleepEnd) / 3600, 0)
@@ -112,7 +119,16 @@ final class DashboardDataService {
             wakeHours = 8
         }
 
-        let energy = scoreEngine.calculateEnergy(
+        // Compute sleep debt: rolling 3-day avg sleep vs target
+        let recentScores = try storage.fetchDailyScores(days: 3)
+        let recentSleepHours = recentScores.map { $0.sleepDurationMin / 60 }
+        let avgRecentSleep = recentSleepHours.isEmpty ? targetSleepHours : (Statistics.mean(recentSleepHours) ?? targetSleepHours)
+        let sleepDebtHours = max(targetSleepHours - avgRecentSleep, 0)
+
+        // Overnight recovery bonus: SDNN >110% baseline AND RHR <95% baseline
+        let overnightRecoveryBonus = avgSDNN > baselineSDNN * 1.10 && restingHR < baselineRHR * 0.95
+
+        let battery = scoreEngine.calculateBodyBattery(
             sleepData: sleep,
             currentSDNN: avgSDNN,
             baselineSDNN: baselineSDNN,
@@ -121,15 +137,17 @@ final class DashboardDataService {
             activeCalories: calories,
             steps: steps,
             wakeHours: wakeHours,
-            previousEnergy: previousEnergy
+            previousBattery: previousBattery,
+            sleepDebtHours: sleepDebtHours,
+            overnightRecoveryBonus: overnightRecoveryBonus
         )
 
-        try storage.saveEnergyReading(level: Double(energy.score), source: energySource)
+        try storage.saveBatteryReading(level: Double(battery.score), source: batterySource)
 
         let insight = insightGenerator.generateInsight(
             stress: stress,
             sleep: sleepResult,
-            energy: energy,
+            battery: battery,
             sleepHours: sleep.totalSleepMinutes / 60,
             hrv: avgSDNN,
             baselineHRV: baselineSDNN
@@ -139,10 +157,10 @@ final class DashboardDataService {
             date: Date(),
             stressScore: stress.score,
             sleepScore: sleepResult.score,
-            energyScore: energy.score,
+            bodyBatteryScore: battery.score,
             stressLevel: stress.level.rawValue,
             sleepLevel: sleepResult.level.rawValue,
-            energyLevel: energy.level.rawValue,
+            bodyBatteryLevel: battery.level.rawValue,
             sleepDurationMin: sleep.totalSleepMinutes,
             sleepEfficiency: sleep.efficiency,
             deepSleepMin: sleep.deepMinutes,
@@ -159,5 +177,19 @@ final class DashboardDataService {
         try storage.upsertDailyScore(todayScore)
         try baselineService.recalculateBaselines()
         return todayScore
+    }
+
+    private func resolveAverageSDNN() async throws -> Double {
+        for window in hrvLookbackWindows {
+            let hrvSamples = try await healthDataProvider.queryHRV(last: window)
+            if let avgSDNN = Statistics.mean(hrvSamples.map(\.sdnn)), avgSDNN > 0 {
+                if window > 24 {
+                    AppLog.info("Using fallback HRV lookback window: \(window)h")
+                }
+                return avgSDNN
+            }
+        }
+
+        throw HealthKitError.noRecentWatchData
     }
 }

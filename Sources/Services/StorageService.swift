@@ -13,10 +13,10 @@ final class StorageService {
         if let existing = try fetchDailyScore(on: score.date) {
             existing.stressScore = score.stressScore
             existing.sleepScore = score.sleepScore
-            existing.energyScore = score.energyScore
+            existing.bodyBatteryScore = score.bodyBatteryScore
             existing.stressLevel = score.stressLevel
             existing.sleepLevel = score.sleepLevel
-            existing.energyLevel = score.energyLevel
+            existing.bodyBatteryLevel = score.bodyBatteryLevel
             existing.sleepDurationMin = score.sleepDurationMin
             existing.sleepEfficiency = score.sleepEfficiency
             existing.deepSleepMin = score.deepSleepMin
@@ -62,8 +62,8 @@ final class StorageService {
         return scores.compactMap(\.bedtimeAt)
     }
 
-    func saveEnergyReading(level: Double, source: String) throws {
-        let reading = EnergyReading(
+    func saveBatteryReading(level: Double, source: String) throws {
+        let reading = BatteryReading(
             timestamp: Date().startOfHour,
             level: Statistics.clamped(level, min: 0, max: 100),
             source: source
@@ -72,8 +72,8 @@ final class StorageService {
         try context.save()
     }
 
-    func latestEnergyReading() throws -> EnergyReading? {
-        var descriptor = FetchDescriptor<EnergyReading>(
+    func latestBatteryReading() throws -> BatteryReading? {
+        var descriptor = FetchDescriptor<BatteryReading>(
             sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
         )
         descriptor.fetchLimit = 1
@@ -93,7 +93,13 @@ final class StorageService {
     }
 
     func savePreferences(_ preferences: UserPreferences) throws {
-        preferences.lastSyncAt = Date()
+        _ = preferences
+        try context.save()
+    }
+
+    func markHealthSync(at date: Date = Date()) throws {
+        let preferences = try fetchPreferences()
+        preferences.lastSyncAt = date
         try context.save()
     }
 

@@ -41,7 +41,13 @@ final class TrendsViewModel {
 
         do {
             errorMessage = nil
-            history = try trendsService.fetchHistory(for: selectedPeriod)
+            let rawHistory = try trendsService.fetchHistory(for: selectedPeriod)
+            history = rawHistory.filter { score in
+                (score.avgSDNN > 0 && score.restingHR > 0) ||
+                    score.sleepDurationMin > 0 ||
+                    score.activeCalories > 0 ||
+                    score.steps > 0
+            }
             hasInsufficientData = history.count < 3
         } catch {
             AppLog.error("TrendsViewModel.load", error: error)
@@ -67,8 +73,8 @@ final class TrendsViewModel {
         return Int((Statistics.mean(values) ?? 0).rounded())
     }
 
-    var averageEnergy: Int {
-        let values = history.map { Double($0.energyScore) }
+    var averageBodyBattery: Int {
+        let values = history.map { Double($0.bodyBatteryScore) }
         return Int((Statistics.mean(values) ?? 0).rounded())
     }
 }

@@ -56,7 +56,7 @@ final class ScoreEngineTests: XCTestCase {
         XCTAssertTrue([SleepLevel.good, .great].contains(result.level))
     }
 
-    func testEnergyScoreClampsToRange() {
+    func testBodyBatteryScoreClampsToRange() {
         let sleep = SleepData(
             segments: [],
             inBedStart: Date(),
@@ -70,7 +70,7 @@ final class ScoreEngineTests: XCTestCase {
             bedtime: Date()
         )
 
-        let result = engine.calculateEnergy(
+        let result = engine.calculateBodyBattery(
             sleepData: sleep,
             currentSDNN: 55,
             baselineSDNN: 40,
@@ -79,7 +79,7 @@ final class ScoreEngineTests: XCTestCase {
             activeCalories: 900,
             steps: 18_000,
             wakeHours: 14,
-            previousEnergy: 95
+            previousBattery: 95
         )
 
         XCTAssertLessThanOrEqual(result.score, 100)

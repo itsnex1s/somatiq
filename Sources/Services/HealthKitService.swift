@@ -14,7 +14,11 @@ protocol HealthDataProviding: Sendable {
 extension HealthDataProviding {
     func authorizeAndEnableBackgroundDelivery() async throws {
         try await requestAuthorization()
-        try await enableBackgroundDelivery()
+        do {
+            try await enableBackgroundDelivery()
+        } catch {
+            AppLog.error("HealthDataProviding.authorizeAndEnableBackgroundDelivery", error: error)
+        }
     }
 }
 
@@ -22,6 +26,7 @@ enum HealthKitError: LocalizedError {
     case unavailable
     case unauthorized
     case noData
+    case noRecentWatchData
     case queryFailure
 
     var errorDescription: String? {
@@ -32,6 +37,8 @@ enum HealthKitError: LocalizedError {
             "Health access is not authorized."
         case .noData:
             "No health data found yet."
+        case .noRecentWatchData:
+            "No recent Apple Watch metrics are available yet."
         case .queryFailure:
             "Unable to query Apple Health."
         }
@@ -74,17 +81,37 @@ final class HealthKitService: HealthDataProviding, @unchecked Sendable {
     }
 
     func queryRestingHR() async throws -> Double? {
-        let type = HKQuantityType(.restingHeartRate)
+        let restingType = HKQuantityType(.restingHeartRate)
+        let heartRateType = HKQuantityType(.heartRate)
+        let bpmUnit = HKUnit.count().unitDivided(by: .minute())
+
         let endDate = Date()
-        let startDate = Calendar.current.date(byAdding: .day, value: -7, to: endDate) ?? endDate.addingTimeInterval(-604_800)
-        let samples = try await queryQuantitySamples(
-            type: type,
-            unit: HKUnit.count().unitDivided(by: .minute()),
-            from: startDate,
+        let restingStartDate = Calendar.current.date(byAdding: .day, value: -7, to: endDate) ?? endDate.addingTimeInterval(-604_800)
+        let restingSamples = try await queryQuantitySamples(
+            type: restingType,
+            unit: bpmUnit,
+            from: restingStartDate,
             to: endDate,
             limit: 1
         )
-        return samples.first?.value
+        if let resting = restingSamples.first?.value, resting > 0 {
+            return resting
+        }
+
+        let heartRateStartDate = Calendar.current.date(byAdding: .day, value: -1, to: endDate) ?? endDate.addingTimeInterval(-86_400)
+        let heartRateSamples = try await queryQuantitySamples(
+            type: heartRateType,
+            unit: bpmUnit,
+            from: heartRateStartDate,
+            to: endDate,
+            limit: 1
+        )
+        if let heartRate = heartRateSamples.first?.value, heartRate > 0 {
+            AppLog.info("Using heart rate fallback because resting heart rate is unavailable.")
+            return heartRate
+        }
+
+        return nil
     }
 
     func querySleep(for date: Date) async throws -> SleepData {
@@ -198,20 +225,31 @@ final class HealthKitService: HealthDataProviding, @unchecked Sendable {
             HKQuantityType(.activeEnergyBurned),
         ]
 
+        var atLeastOneTypeEnabled = false
+
         for type in types {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                store.enableBackgroundDelivery(for: type, frequency: .hourly) { success, error in
-                    if let error {
-                        continuation.resume(throwing: error)
-                        return
-                    }
-                    if success {
-                        continuation.resume(returning: ())
-                    } else {
-                        continuation.resume(throwing: HealthKitError.queryFailure)
+            do {
+                let success: Bool = try await withCheckedThrowingContinuation { continuation in
+                    store.enableBackgroundDelivery(for: type, frequency: .hourly) { success, error in
+                        if let error {
+                            continuation.resume(throwing: error)
+                            return
+                        }
+                        continuation.resume(returning: success)
                     }
                 }
+                if success {
+                    atLeastOneTypeEnabled = true
+                } else {
+                    AppLog.info("Background delivery not enabled for \(type.identifier).")
+                }
+            } catch {
+                AppLog.error("HealthKitService.enableBackgroundDelivery.\(type.identifier)", error: error)
             }
+        }
+
+        if !atLeastOneTypeEnabled {
+            throw HealthKitError.queryFailure
         }
     }
 

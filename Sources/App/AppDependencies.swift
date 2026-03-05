@@ -19,7 +19,8 @@ final class AppDependencies {
         trendsService = TrendsDataService(context: modelContext)
         settingsService = SettingsDataService(
             context: modelContext,
-            healthDataProvider: healthDataProvider
+            healthDataProvider: healthDataProvider,
+            dashboardService: dashboardService
         )
     }
 }

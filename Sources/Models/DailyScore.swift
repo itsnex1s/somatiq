@@ -30,6 +30,16 @@ final class DailyScore {
     var steps: Int
     var insightText: String
 
+    var bodyBatteryScore: Int {
+        get { energyScore }
+        set { energyScore = newValue }
+    }
+
+    var bodyBatteryLevel: String {
+        get { energyLevel }
+        set { energyLevel = newValue }
+    }
+
     init(
         date: Date,
         stressScore: Int = 0,
@@ -70,5 +80,47 @@ final class DailyScore {
         self.activeCalories = activeCalories
         self.steps = steps
         self.insightText = insightText
+    }
+
+    convenience init(
+        date: Date,
+        stressScore: Int = 0,
+        sleepScore: Int = 0,
+        bodyBatteryScore: Int = 0,
+        stressLevel: String = "unknown",
+        sleepLevel: String = "unknown",
+        bodyBatteryLevel: String = "unknown",
+        sleepDurationMin: Double = 0,
+        sleepEfficiency: Double = 0,
+        deepSleepMin: Double = 0,
+        remSleepMin: Double = 0,
+        coreSleepMin: Double = 0,
+        bedtimeAt: Date? = nil,
+        avgSDNN: Double = 0,
+        restingHR: Double = 0,
+        activeCalories: Double = 0,
+        steps: Int = 0,
+        insightText: String = ""
+    ) {
+        self.init(
+            date: date,
+            stressScore: stressScore,
+            sleepScore: sleepScore,
+            energyScore: bodyBatteryScore,
+            stressLevel: stressLevel,
+            sleepLevel: sleepLevel,
+            energyLevel: bodyBatteryLevel,
+            sleepDurationMin: sleepDurationMin,
+            sleepEfficiency: sleepEfficiency,
+            deepSleepMin: deepSleepMin,
+            remSleepMin: remSleepMin,
+            coreSleepMin: coreSleepMin,
+            bedtimeAt: bedtimeAt,
+            avgSDNN: avgSDNN,
+            restingHR: restingHR,
+            activeCalories: activeCalories,
+            steps: steps,
+            insightText: insightText
+        )
     }
 }

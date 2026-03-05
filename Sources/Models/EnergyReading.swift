@@ -13,3 +13,5 @@ final class EnergyReading {
         self.source = source
     }
 }
+
+typealias BatteryReading = EnergyReading

@@ -13,10 +13,10 @@ final class ServiceLayerTests: XCTestCase {
             date: Date(),
             stressScore: 52,
             sleepScore: 68,
-            energyScore: 74,
+            bodyBatteryScore: 74,
             stressLevel: StressLevel.moderate.rawValue,
             sleepLevel: SleepLevel.good.rawValue,
-            energyLevel: EnergyLevel.good.rawValue,
+            bodyBatteryLevel: BatteryLevel.good.rawValue,
             sleepDurationMin: 430,
             sleepEfficiency: 0.89,
             deepSleepMin: 90,
@@ -37,7 +37,7 @@ final class ServiceLayerTests: XCTestCase {
 
         XCTAssertEqual(snapshot.today.stressScore, 52)
         XCTAssertEqual(snapshot.today.sleepScore, 68)
-        XCTAssertEqual(snapshot.today.energyScore, 74)
+        XCTAssertEqual(snapshot.today.bodyBatteryScore, 74)
         XCTAssertEqual(snapshot.weekScores.count, 1)
         let queryHRVCallCount = await mock.queryHRVCallCount()
         XCTAssertEqual(queryHRVCallCount, 0)
@@ -59,7 +59,7 @@ final class ServiceLayerTests: XCTestCase {
         let queryHRVCallCount = await mock.queryHRVCallCount()
         XCTAssertEqual(requestAuthorizationCallCount, 0)
         XCTAssertEqual(queryHRVCallCount, 1)
-        XCTAssertEqual(try storage.latestEnergyReading()?.source, "unit_test_refresh")
+        XCTAssertEqual(try storage.latestBatteryReading()?.source, "unit_test_refresh")
     }
 
     func testSettingsReconnectHealthCallsAuthorizationAndBackgroundDelivery() async throws {
@@ -68,12 +68,45 @@ final class ServiceLayerTests: XCTestCase {
         let mock = MockHealthDataProvider()
         let service = SettingsDataService(context: context, healthDataProvider: mock)
 
-        try await service.reconnectHealth()
+        let reconnectResult = try await service.reconnectHealth()
 
         let requestAuthorizationCallCount = await mock.requestAuthorizationCallCount()
         let enableBackgroundDeliveryCallCount = await mock.enableBackgroundDeliveryCallCount()
         XCTAssertEqual(requestAuthorizationCallCount, 1)
         XCTAssertEqual(enableBackgroundDeliveryCallCount, 1)
+        switch reconnectResult {
+        case .connectedNoData:
+            break
+        case .syncedWithData:
+            XCTFail("Expected reconnect without dashboard service to return connectedNoData.")
+        }
+
+        let preferences = try StorageService(context: context).fetchPreferences()
+        XCTAssertNil(preferences.lastSyncAt)
+    }
+
+    func testSettingsReconnectWithDashboardUpdatesLastSync() async throws {
+        let container = try AppModelContainerFactory.makeContainer(isStoredInMemoryOnly: true)
+        let context = container.mainContext
+        let mock = MockHealthDataProvider()
+        let dashboardService = DashboardDataService(context: context, healthDataProvider: mock)
+        let service = SettingsDataService(
+            context: context,
+            healthDataProvider: mock,
+            dashboardService: dashboardService
+        )
+
+        let reconnectResult = try await service.reconnectHealth()
+
+        switch reconnectResult {
+        case let .syncedWithData(lastSyncAt):
+            XCTAssertLessThanOrEqual(abs(lastSyncAt.timeIntervalSinceNow), 5)
+        case .connectedNoData:
+            XCTFail("Expected reconnect with dashboard service to sync at least fallback data.")
+        }
+
+        let preferences = try StorageService(context: context).fetchPreferences()
+        XCTAssertNotNil(preferences.lastSyncAt)
     }
 
     func testIntegrationPipelineRecalculateThenReadFromTrends() async throws {
@@ -91,7 +124,7 @@ final class ServiceLayerTests: XCTestCase {
 
         XCTAssertEqual(today.date, Date().startOfDay)
         XCTAssertEqual(history.count, 1)
-        XCTAssertEqual(history.first?.energyScore, today.energyScore)
+        XCTAssertEqual(history.first?.bodyBatteryScore, today.bodyBatteryScore)
 
         let requestAuthorizationCallCount = await mock.requestAuthorizationCallCount()
         XCTAssertEqual(requestAuthorizationCallCount, 1)

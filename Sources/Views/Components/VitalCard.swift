@@ -22,6 +22,17 @@ enum VitalTrend {
             SomatiqColor.textTertiary
         }
     }
+
+    var arrowSymbol: String? {
+        switch self {
+        case .up:
+            "chevron.up"
+        case .down:
+            "chevron.down"
+        case .neutral:
+            nil
+        }
+    }
 }
 
 struct VitalCard: View {
@@ -30,31 +41,56 @@ struct VitalCard: View {
     let value: String
     let trend: VitalTrend
 
+    @State private var isPressed = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Image(systemName: symbol)
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(SomatiqColor.textPrimary)
+                .foregroundStyle(iconTint)
 
             Text(label)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(SomatiqColor.textTertiary)
 
             Text(value)
-                .font(.system(size: 22, weight: .bold))
+                .font(.vitalNumber())
                 .foregroundStyle(SomatiqColor.textPrimary)
+                .contentTransition(.numericText())
 
-            Text(trend.text)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(trend.color)
+            HStack(spacing: 3) {
+                if let arrow = trend.arrowSymbol {
+                    Image(systemName: arrow)
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(trend.color)
+                }
+                Text(trend.text)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(trend.color)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(SomatiqColor.card.opacity(0.7))
-        .overlay(
-            RoundedRectangle(cornerRadius: SomatiqRadius.cardMedium)
-                .stroke(SomatiqColor.softBorder, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: SomatiqRadius.cardMedium))
+        .somatiqCardStyle(tint: iconTint)
+        .scaleEffect(isPressed ? 0.97 : 1.0)
+        .animation(.spring(duration: 0.2), value: isPressed)
+        .onLongPressGesture(minimumDuration: .infinity, pressing: { pressing in
+            isPressed = pressing
+        }, perform: {})
+    }
+
+    private var iconTint: Color {
+        switch symbol {
+        case "heart.fill":
+            SomatiqColor.heart
+        case "waveform.path.ecg":
+            SomatiqColor.accent
+        case "moon.fill":
+            SomatiqColor.sleepSecondary
+        case "flame.fill":
+            SomatiqColor.energy
+        default:
+            SomatiqColor.textPrimary
+        }
     }
 }

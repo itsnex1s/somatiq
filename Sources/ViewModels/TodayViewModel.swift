@@ -11,11 +11,11 @@ final class TodayViewModel {
 
     var stressScore = 0
     var sleepScore = 0
-    var energyScore = 0
+    var bodyBatteryScore = 0
 
     var stressLevel = StressLevel.low
     var sleepLevel = SleepLevel.poor
-    var energyLevel = EnergyLevel.low
+    var bodyBatteryLevel = BatteryLevel.low
 
     var restingHeartRate = 0
     var hrvValue = 0
@@ -31,12 +31,14 @@ final class TodayViewModel {
     var restingHRTrend: VitalTrend = .neutral("--")
     var hrvTrend: VitalTrend = .neutral("--")
     var sleepTrend: VitalTrend = .neutral("--")
-    var energyTrend: VitalTrend = .neutral("--")
+    var batteryTrend: VitalTrend = .neutral("--")
 
     private let dashboardService: DashboardDataService
+    let trendsService: TrendsDataService
 
-    init(dashboardService: DashboardDataService) {
+    init(dashboardService: DashboardDataService, trendsService: TrendsDataService) {
         self.dashboardService = dashboardService
+        self.trendsService = trendsService
     }
 
     func loadIfNeeded() async {
@@ -77,10 +79,19 @@ final class TodayViewModel {
             calculateTrends()
         } catch {
             AppLog.error("TodayViewModel.refresh", error: error)
-            if let healthError = error as? HealthKitError, healthError == .noData {
-                noDataMessage = "No data yet. Wear Apple Watch and allow Health access."
-                errorMessage = nil
-                return
+            if let healthError = error as? HealthKitError {
+                switch healthError {
+                case .noData:
+                    noDataMessage = "No data yet. Wear Apple Watch and allow Health access."
+                    errorMessage = nil
+                    return
+                case .noRecentWatchData:
+                    noDataMessage = "Apple Watch metrics are not synced yet. Keep watch on wrist/unlocked, open Health once, then pull to refresh."
+                    errorMessage = nil
+                    return
+                default:
+                    break
+                }
             }
             noDataMessage = nil
             errorMessage = AppErrorMapper.userMessage(for: error)
@@ -90,10 +101,10 @@ final class TodayViewModel {
     private func apply(score: DailyScore) {
         stressScore = score.stressScore
         sleepScore = score.sleepScore
-        energyScore = score.energyScore
+        bodyBatteryScore = score.bodyBatteryScore
         stressLevel = StressLevel(rawValue: score.stressLevel) ?? .low
         sleepLevel = SleepLevel(rawValue: score.sleepLevel) ?? .poor
-        energyLevel = EnergyLevel(rawValue: score.energyLevel) ?? .low
+        bodyBatteryLevel = BatteryLevel(rawValue: score.bodyBatteryLevel) ?? .low
         restingHeartRate = Int(score.restingHR.rounded())
         hrvValue = Int(score.avgSDNN.rounded())
         sleepDurationText = sleepDurationString(minutes: score.sleepDurationMin)
@@ -130,7 +141,7 @@ final class TodayViewModel {
             format: { String(format: "%.1fh avg", $0) }
         )
 
-        energyTrend = makeTrend(
+        batteryTrend = makeTrend(
             recent: recent.map(\.activeCalories),
             earlier: earlier.map(\.activeCalories),
             invertBetter: false,

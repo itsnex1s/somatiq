@@ -7,7 +7,7 @@ enum PreviewData {
 
         let stress = [52, 44, 61, 47, 38, 40, 32]
         let sleep = [70, 85, 62, 90, 74, 88, 82]
-        let energy = [80, 65, 55, 70, 85, 90, 75]
+        let battery = [80, 65, 55, 70, 85, 90, 75]
 
         return (0..<7).map { index in
             let date = calendar.date(byAdding: .day, value: index - 6, to: today) ?? today
@@ -15,10 +15,10 @@ enum PreviewData {
                 date: date,
                 stressScore: stress[index],
                 sleepScore: sleep[index],
-                energyScore: energy[index],
+                bodyBatteryScore: battery[index],
                 stressLevel: stress[index] < 34 ? "low" : (stress[index] < 67 ? "moderate" : "high"),
                 sleepLevel: sleep[index] > 80 ? "great" : (sleep[index] > 60 ? "good" : "fair"),
-                energyLevel: energy[index] > 75 ? "charged" : (energy[index] > 50 ? "good" : "low"),
+                bodyBatteryLevel: battery[index] > 75 ? "charged" : (battery[index] > 50 ? "good" : "low"),
                 sleepDurationMin: 420,
                 sleepEfficiency: 0.9,
                 deepSleepMin: 90,

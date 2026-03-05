@@ -6,6 +6,10 @@ struct TrendsView: View {
     @State private var selectedScoreDate: Date?
     @State private var selectedSleepDate: Date?
     @State private var selectedHRVDate: Date?
+    @State private var chartContentID = UUID()
+    @State private var sectionsAppeared = false
+
+    @Namespace private var pickerNamespace
 
     init(trendsService: TrendsDataService) {
         _viewModel = State(initialValue: TrendsViewModel(trendsService: trendsService))
@@ -20,44 +24,105 @@ struct TrendsView: View {
                     Text("Trends")
                         .font(.system(size: 28, weight: .bold))
                         .foregroundStyle(SomatiqColor.textPrimary)
+                        .modifier(TrendSectionEntrance(index: 0, appeared: sectionsAppeared))
 
                     periodPicker
+                        .modifier(TrendSectionEntrance(index: 1, appeared: sectionsAppeared))
                     summaryCard
+                        .modifier(TrendSectionEntrance(index: 2, appeared: sectionsAppeared))
 
-                    if let errorMessage = viewModel.errorMessage {
+                    if viewModel.isLoading && viewModel.history.isEmpty {
+                        trendLoadingSkeleton
+                            .transition(chartTransition)
+                    } else if let errorMessage = viewModel.errorMessage {
                         errorCard(message: errorMessage)
+                            .transition(chartTransition)
                     } else if viewModel.hasInsufficientData {
                         GlassCard {
-                            Text("Collect at least 3 days of data to unlock full trend analysis.")
+                            Text("Collect at least \(minimumTrendPoints) days of real data to unlock trend charts.")
                                 .font(.system(size: 14))
                                 .foregroundStyle(SomatiqColor.textSecondary)
                         }
+                        .transition(chartTransition)
+                    } else {
+                        VStack(spacing: 20) {
+                            scoreTrendChart
+                            sleepBreakdownChart
+                            hrvChart
+                        }
+                        .id(chartContentID)
+                        .transition(chartTransition)
+                        .modifier(TrendSectionEntrance(index: 3, appeared: sectionsAppeared))
                     }
-
-                    scoreTrendChart
-                    sleepBreakdownChart
-                    hrvChart
                 }
                 .padding(.horizontal, SomatiqSpacing.pageHorizontal)
                 .padding(.vertical, 16)
+                .animation(SomatiqAnimation.chartReveal, value: viewModel.history.count)
             }
             .scrollIndicators(.hidden)
         }
         .task {
             viewModel.load()
+            withAnimation(SomatiqAnimation.sectionReveal) {
+                sectionsAppeared = true
+            }
+        }
+        .onChange(of: viewModel.selectedPeriod) { _, _ in
+            selectedScoreDate = nil
+            selectedSleepDate = nil
+            selectedHRVDate = nil
+            withAnimation(SomatiqAnimation.chartReveal) {
+                chartContentID = UUID()
+            }
         }
     }
 
+    // MARK: - Custom period picker
+
     private var periodPicker: some View {
-        Picker("Period", selection: Binding(
-            get: { viewModel.selectedPeriod },
-            set: { viewModel.updatePeriod($0) }
-        )) {
+        HStack(spacing: 0) {
             ForEach(TrendPeriod.allCases) { period in
-                Text(period.title).tag(period)
+                Button {
+                    withAnimation(SomatiqAnimation.tabSwitch) {
+                        viewModel.updatePeriod(period)
+                    }
+                } label: {
+                    Text(period.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(viewModel.selectedPeriod == period ? .white : SomatiqColor.textTertiary)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity)
+                        .background {
+                            if viewModel.selectedPeriod == period {
+                                Capsule()
+                                    .fill(SomatiqColor.accent.opacity(0.3))
+                                    .matchedGeometryEffect(id: "periodIndicator", in: pickerNamespace)
+                            }
+                        }
+                }
+                .buttonStyle(.somatiqPressable)
             }
         }
-        .pickerStyle(.segmented)
+        .padding(4)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: "#1B1D2A"), Color(hex: "#10111A")],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(Capsule())
+        .overlay {
+            Capsule()
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.14), Color.white.opacity(0.06)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.7
+                )
+        }
     }
 
     private var summaryCard: some View {
@@ -66,12 +131,12 @@ struct TrendsView: View {
                 HStack {
                     summaryItem(title: "Stress", value: "\(viewModel.averageStress)", color: SomatiqColor.stress)
                     summaryItem(title: "Sleep", value: "\(viewModel.averageSleep)", color: SomatiqColor.sleep)
-                    summaryItem(title: "Energy", value: "\(viewModel.averageEnergy)", color: SomatiqColor.energy)
+                    summaryItem(title: "Battery", value: "\(viewModel.averageBodyBattery)", color: SomatiqColor.bodyBattery)
                 }
                 VStack(spacing: 12) {
                     summaryItem(title: "Stress", value: "\(viewModel.averageStress)", color: SomatiqColor.stress)
                     summaryItem(title: "Sleep", value: "\(viewModel.averageSleep)", color: SomatiqColor.sleep)
-                    summaryItem(title: "Energy", value: "\(viewModel.averageEnergy)", color: SomatiqColor.energy)
+                    summaryItem(title: "Battery", value: "\(viewModel.averageBodyBattery)", color: SomatiqColor.bodyBattery)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -84,11 +149,23 @@ struct TrendsView: View {
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(SomatiqColor.textTertiary)
             Text(value)
-                .font(.system(size: 24, weight: .bold))
+                .font(.scoreNumber(24))
                 .foregroundStyle(color)
+                .contentTransition(.numericText())
         }
         .frame(maxWidth: .infinity)
     }
+
+    private var trendLoadingSkeleton: some View {
+        VStack(spacing: 12) {
+            ShimmerPlaceholder(height: 80)
+            ShimmerPlaceholder(height: 220)
+            ShimmerPlaceholder(height: 190)
+            ShimmerPlaceholder(height: 190)
+        }
+    }
+
+    // MARK: - Score trend chart
 
     private var scoreTrendChart: some View {
         GlassCard {
@@ -99,12 +176,36 @@ struct TrendsView: View {
 
                 Chart {
                     ForEach(viewModel.history, id: \.date) { entry in
+                        // Area fills
+                        AreaMark(
+                            x: .value("Date", entry.date),
+                            y: .value("Stress", entry.stressScore)
+                        )
+                        .foregroundStyle(SomatiqColor.stress.opacity(0.15).gradient)
+                        .interpolationMethod(.catmullRom)
+
+                        AreaMark(
+                            x: .value("Date", entry.date),
+                            y: .value("Sleep", entry.sleepScore)
+                        )
+                        .foregroundStyle(SomatiqColor.sleep.opacity(0.15).gradient)
+                        .interpolationMethod(.catmullRom)
+
+                        AreaMark(
+                            x: .value("Date", entry.date),
+                            y: .value("Battery", entry.bodyBatteryScore)
+                        )
+                        .foregroundStyle(SomatiqColor.bodyBattery.opacity(0.15).gradient)
+                        .interpolationMethod(.catmullRom)
+
+                        // Line marks
                         LineMark(
                             x: .value("Date", entry.date),
                             y: .value("Stress", entry.stressScore)
                         )
                         .foregroundStyle(SomatiqColor.stress)
                         .interpolationMethod(.catmullRom)
+                        .lineStyle(StrokeStyle(lineWidth: 2.5))
 
                         LineMark(
                             x: .value("Date", entry.date),
@@ -112,14 +213,46 @@ struct TrendsView: View {
                         )
                         .foregroundStyle(SomatiqColor.sleep)
                         .interpolationMethod(.catmullRom)
+                        .lineStyle(StrokeStyle(lineWidth: 2.5))
 
                         LineMark(
                             x: .value("Date", entry.date),
-                            y: .value("Energy", entry.energyScore)
+                            y: .value("Battery", entry.bodyBatteryScore)
                         )
-                        .foregroundStyle(SomatiqColor.energy)
+                        .foregroundStyle(SomatiqColor.bodyBattery)
                         .interpolationMethod(.catmullRom)
+                        .lineStyle(StrokeStyle(lineWidth: 2.5))
+
+                        // Symbol marks at data points
+                        PointMark(
+                            x: .value("Date", entry.date),
+                            y: .value("Stress", entry.stressScore)
+                        )
+                        .foregroundStyle(SomatiqColor.stress)
+                        .symbolSize(16)
+
+                        PointMark(
+                            x: .value("Date", entry.date),
+                            y: .value("Sleep", entry.sleepScore)
+                        )
+                        .foregroundStyle(SomatiqColor.sleep)
+                        .symbolSize(16)
+
+                        PointMark(
+                            x: .value("Date", entry.date),
+                            y: .value("Battery", entry.bodyBatteryScore)
+                        )
+                        .foregroundStyle(SomatiqColor.bodyBattery)
+                        .symbolSize(16)
                     }
+
+                    // Grid lines
+                    RuleMark(y: .value("", 25))
+                        .foregroundStyle(Color.white.opacity(0.03))
+                    RuleMark(y: .value("", 50))
+                        .foregroundStyle(Color.white.opacity(0.03))
+                    RuleMark(y: .value("", 75))
+                        .foregroundStyle(Color.white.opacity(0.03))
 
                     if let selectedEntry = selectedScoreEntry {
                         RuleMark(x: .value("Selected Date", selectedEntry.date))
@@ -140,15 +273,15 @@ struct TrendsView: View {
 
                         PointMark(
                             x: .value("Date", selectedEntry.date),
-                            y: .value("Energy", selectedEntry.energyScore)
+                            y: .value("Battery", selectedEntry.bodyBatteryScore)
                         )
-                        .foregroundStyle(SomatiqColor.energy)
+                        .foregroundStyle(SomatiqColor.bodyBattery)
                         .annotation(position: .top, alignment: .leading) {
                             selectionCallout {
                                 Text(selectedEntry.date.formatted(.dateTime.day().month(.abbreviated)))
                                 Text("Stress \(selectedEntry.stressScore)")
                                 Text("Sleep \(selectedEntry.sleepScore)")
-                                Text("Energy \(selectedEntry.energyScore)")
+                                Text("Battery \(selectedEntry.bodyBatteryScore)")
                             }
                         }
                     }
@@ -178,6 +311,7 @@ struct TrendsView: View {
                         y: .value("Minutes", point.value)
                     )
                     .foregroundStyle(by: .value("Stage", point.stage))
+                    .cornerRadius(4)
                 }
                 .frame(height: 180)
                 .chartForegroundStyleScale([
@@ -212,11 +346,25 @@ struct TrendsView: View {
 
                 Chart {
                     ForEach(viewModel.history, id: \.date) { entry in
+                        AreaMark(
+                            x: .value("Date", entry.date),
+                            y: .value("HRV", entry.avgSDNN)
+                        )
+                        .foregroundStyle(SomatiqColor.accent.opacity(0.12).gradient)
+
                         LineMark(
                             x: .value("Date", entry.date),
                             y: .value("HRV", entry.avgSDNN)
                         )
                         .foregroundStyle(SomatiqColor.accent)
+                        .lineStyle(StrokeStyle(lineWidth: 2.5))
+
+                        PointMark(
+                            x: .value("Date", entry.date),
+                            y: .value("HRV", entry.avgSDNN)
+                        )
+                        .foregroundStyle(SomatiqColor.accent)
+                        .symbolSize(16)
                     }
 
                     RuleMark(y: .value("Baseline", baseline))
@@ -311,18 +459,31 @@ struct TrendsView: View {
         .font(.system(size: 10, weight: .medium))
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .background(SomatiqColor.card.opacity(0.95))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(SomatiqColor.border, lineWidth: 1)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: "#1B1D2A"), Color(hex: "#10111A")],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         )
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.14), Color.white.opacity(0.06)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 0.7
+                )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func errorCard(message: String) -> some View {
         GlassCard {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Couldn’t load trends")
+                Text("Couldn't load trends")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(SomatiqColor.textPrimary)
 
@@ -339,6 +500,14 @@ struct TrendsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
+
+    private var minimumTrendPoints: Int {
+        3
+    }
+
+    private var chartTransition: AnyTransition {
+        .opacity.combined(with: .move(edge: .bottom))
+    }
 }
 
 private struct SleepBreakdownPoint: Identifiable {
@@ -346,4 +515,21 @@ private struct SleepBreakdownPoint: Identifiable {
     let date: Date
     let stage: String
     let value: Double
+}
+
+private struct TrendSectionEntrance: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    let index: Int
+    let appeared: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(appeared ? 1 : 0)
+            .offset(y: appeared ? 0 : 18)
+            .animation(
+                reduceMotion ? .linear(duration: 0.1) : SomatiqAnimation.staggered(index: index),
+                value: appeared
+            )
+    }
 }

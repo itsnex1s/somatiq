@@ -4,7 +4,7 @@ import UIKit
 enum ScoreKind: Equatable {
     case stress
     case sleep
-    case energy
+    case bodyBattery
 
     var title: String {
         switch self {
@@ -12,8 +12,8 @@ enum ScoreKind: Equatable {
             "Stress"
         case .sleep:
             "Sleep"
-        case .energy:
-            "Energy"
+        case .bodyBattery:
+            "Battery"
         }
     }
 
@@ -23,8 +23,19 @@ enum ScoreKind: Equatable {
             SomatiqColor.stressGradient
         case .sleep:
             SomatiqColor.sleepGradient
-        case .energy:
+        case .bodyBattery:
             SomatiqColor.energyGradient
+        }
+    }
+
+    var angularGradient: AngularGradient {
+        switch self {
+        case .stress:
+            SomatiqColor.stressAngular
+        case .sleep:
+            SomatiqColor.sleepAngular
+        case .bodyBattery:
+            SomatiqColor.energyAngular
         }
     }
 
@@ -34,8 +45,8 @@ enum ScoreKind: Equatable {
             SomatiqColor.stress
         case .sleep:
             SomatiqColor.sleep
-        case .energy:
-            SomatiqColor.energy
+        case .bodyBattery:
+            SomatiqColor.bodyBattery
         }
     }
 }
@@ -48,31 +59,45 @@ struct ScoreRing: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var animatedScore: Double = 0
     @State private var lastHapticBucket: Int = -1
+    @State private var ringAppeared = false
+    @State private var pulseGlow = false
+
+    private let ringSize: CGFloat = 100
+    private let strokeWidth: CGFloat = 7
 
     var body: some View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.08), lineWidth: 6)
+                    .stroke(Color.white.opacity(0.08), lineWidth: strokeWidth)
 
                 Circle()
-                    .trim(from: 0, to: progress)
+                    .trim(from: 0, to: ringAppeared ? progress : 0)
                     .stroke(
-                        kind.gradient,
-                        style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                        kind.angularGradient,
+                        style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round)
                     )
                     .rotationEffect(.degrees(-90))
-                    .shadow(color: kind.glowColor.opacity(0.35), radius: 6)
+                    .shadow(color: kind.glowColor.opacity(0.5), radius: 8)
                     .animation(
-                        reduceMotion ? .linear(duration: 0.2) : .easeOut(duration: 1.5),
+                        reduceMotion ? .linear(duration: 0.2) : SomatiqAnimation.ringFill,
+                        value: ringAppeared
+                    )
+                    .animation(
+                        reduceMotion ? .linear(duration: 0.2) : SomatiqAnimation.ringFill,
                         value: progress
                     )
 
                 Text("\(Int(animatedScore.rounded()))")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.scoreNumber())
                     .foregroundStyle(kind.glowColor)
+                    .contentTransition(.numericText())
             }
-            .frame(width: 80, height: 80)
+            .frame(width: ringSize, height: ringSize)
+            .shadow(
+                color: score > 80 ? kind.glowColor.opacity(pulseGlow ? 0.25 : 0.1) : .clear,
+                radius: 12
+            )
             .padding(.top, 2)
 
             Text(kind.title.uppercased())
@@ -86,14 +111,15 @@ struct ScoreRing: View {
         }
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
-        .background(SomatiqColor.card.opacity(0.8))
-        .overlay(
-            RoundedRectangle(cornerRadius: SomatiqRadius.cardLarge)
-                .stroke(SomatiqColor.border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: SomatiqRadius.cardLarge))
+        .somatiqCardStyle(tint: kind.glowColor, cornerRadius: SomatiqRadius.cardLarge)
         .onAppear {
+            ringAppeared = true
             animateScore()
+            if score > 80 && !reduceMotion {
+                withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                    pulseGlow = true
+                }
+            }
         }
         .onChange(of: score) { _, _ in
             animateScore()
@@ -130,10 +156,10 @@ struct ScoreRing: View {
             triggerHapticIfNeeded()
             return
         }
-        withAnimation(.easeOut(duration: 0.9)) {
+        withAnimation(SomatiqAnimation.scoreReveal) {
             animatedScore = Double(score)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             triggerHapticIfNeeded()
         }
     }

@@ -1,20 +1,17 @@
 import SwiftUI
 
 struct GlassCard<Content: View>: View {
+    let tint: Color?
     let content: Content
 
-    init(@ViewBuilder content: () -> Content) {
+    init(tint: Color? = nil, @ViewBuilder content: () -> Content) {
+        self.tint = tint
         self.content = content()
     }
 
     var body: some View {
         content
             .padding(SomatiqSpacing.cardPadding)
-            .background(SomatiqColor.card.opacity(0.72))
-            .overlay(
-                RoundedRectangle(cornerRadius: SomatiqRadius.cardMedium)
-                    .stroke(SomatiqColor.softBorder, lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: SomatiqRadius.cardMedium))
+            .somatiqCardStyle(tint: tint)
     }
 }

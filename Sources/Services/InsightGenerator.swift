@@ -4,7 +4,7 @@ struct InsightGenerator {
     func generateInsight(
         stress: StressResult,
         sleep: SleepResult,
-        energy: EnergyResult,
+        battery: BatteryResult,
         sleepHours: Double,
         hrv: Double,
         baselineHRV: Double
@@ -17,8 +17,8 @@ struct InsightGenerator {
             return "Stress is elevated versus your baseline. Consider a short low-intensity walk and breathing break."
         }
 
-        if energy.level == .charged && stress.level == .low {
-            return "Recovery looks strong today. Energy is high and stress remains low."
+        if battery.level == .charged && stress.level == .low {
+            return "Recovery looks strong today. Battery is charged and stress remains low."
         }
 
         if hrv < baselineHRV * 0.9 {
@@ -26,7 +26,7 @@ struct InsightGenerator {
         }
 
         if sleep.level == .great {
-            return "Solid sleep quality supports stable energy and stress resilience today."
+            return "Solid sleep quality supports stable battery and stress resilience today."
         }
 
         return "Your body signals are stable today. Keep hydration, movement, and sleep timing consistent."

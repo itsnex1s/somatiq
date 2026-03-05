@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -21,6 +21,7 @@
 		32550F3F6450C700CFAEF998 /* AppModelContainerFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32ECD06E0344E8AE6E5674D /* AppModelContainerFactory.swift */; };
 		3648E371EA046D981DD6ACB9 /* AnimatedNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F9369923F438B60537CAE1 /* AnimatedNumber.swift */; };
 		37E52250AD950A1A2BE66CA6 /* DashboardDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9C89410A7A04B4D88E465DE /* DashboardDataService.swift */; };
+		3A7E2C5F91D8B04A6E5F3C12 /* ShimmerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C3A9F2B8D4E71A053B2C8D9 /* ShimmerModifier.swift */; };
 		468A5F0ADD4E3D2618762698 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C788663B4CC69DDAABF5BE3A /* Date+Extensions.swift */; };
 		4ABED74A7E5005E9A130C109 /* InsightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A27E6E5A20109EA02D980D /* InsightCard.swift */; };
 		514542097BAC568C5780A702 /* AppErrorMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EEF863636FBC8C4D73FCE51 /* AppErrorMapper.swift */; };
@@ -50,6 +51,8 @@
 		F3398F16153B739217635F18 /* UserBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31695A1414490A5469256C85 /* UserBaseline.swift */; };
 		F4EF51E067303BFFA4E1AC5D /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF40CBA77ABBB01E5B65B7E4 /* TodayViewModel.swift */; };
 		F856C98CF6F4551DD2B34141 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4744484D73E7CD4CE14E2355 /* SettingsView.swift */; };
+		E7A4C2D19F3B586A0C2E7D41 /* MetricCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1D3E8B7C9F20A4D6B8E1F3 /* MetricCard.swift */; };
+		B3E8D5A27C1F40698A5B3E72 /* MetricDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2F6A4E1B5C93D7E0A4F2C6 /* MetricDetailView.swift */; };
 		FDCC8C64CD44811B56B0F78E /* ScoreEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8C07C0901E9E06216FC4C3 /* ScoreEngine.swift */; };
 /* End PBXBuildFile section */
 
@@ -65,10 +68,10 @@
 
 /* Begin PBXFileReference section */
 		01705151195DA0C659EDFB64 /* AppDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDependencies.swift; sourceTree = "<group>"; };
-		01F0B75B2177635667F42AE0 /* Somatiq.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Somatiq.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		01F0B75B2177635667F42AE0 /* Somatiq.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Somatiq.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		04C0E2D2784B3AB4626BE989 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		0A8C07C0901E9E06216FC4C3 /* ScoreEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEngine.swift; sourceTree = "<group>"; };
-		0FF81B2A8FEB58BA92B07A8C /* SomatiqTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SomatiqTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0FF81B2A8FEB58BA92B07A8C /* SomatiqTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SomatiqTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		10A70CD64450DAA4E1770EA8 /* ServiceLayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceLayerTests.swift; sourceTree = "<group>"; };
 		1DEE6A25FEA42CA15C6A485A /* ScoreRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreRing.swift; sourceTree = "<group>"; };
 		2F4C44EA531E1688CA8F56D1 /* LabsPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabsPlaceholderView.swift; sourceTree = "<group>"; };
@@ -87,10 +90,13 @@
 		526465A621D0A53144923CF7 /* InsightGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightGenerator.swift; sourceTree = "<group>"; };
 		5FDE9AA73396C303B5716404 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
 		661436628CE42A05465BD0D5 /* Statistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Statistics.swift; sourceTree = "<group>"; };
+		5A1D3E8B7C9F20A4D6B8E1F3 /* MetricCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCard.swift; sourceTree = "<group>"; };
+		6C3A9F2B8D4E71A053B2C8D9 /* ShimmerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerModifier.swift; sourceTree = "<group>"; };
 		713A44A3A508BB17E9057E04 /* ScoreEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEngineTests.swift; sourceTree = "<group>"; };
 		77F56C1915EAA6A175D5AC7B /* DailyScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyScore.swift; sourceTree = "<group>"; };
 		7B08E7CACC2AB7A975F8DC69 /* PrivacyBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyBadge.swift; sourceTree = "<group>"; };
 		852292E34CE51C51ECC1BE13 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		8D2F6A4E1B5C93D7E0A4F2C6 /* MetricDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailView.swift; sourceTree = "<group>"; };
 		8A41428C862FA3BD5D630DF8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		981677700FFBE263746153A2 /* SettingsDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDataService.swift; sourceTree = "<group>"; };
 		9ABD6DF7E857AFF47FF9EE2F /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
@@ -188,8 +194,11 @@
 				D73CD527256BE6C42992C181 /* ErrorAlertModifier.swift */,
 				9F19B3E71215CB170063A4CC /* GlassCard.swift */,
 				43A27E6E5A20109EA02D980D /* InsightCard.swift */,
+				5A1D3E8B7C9F20A4D6B8E1F3 /* MetricCard.swift */,
+				8D2F6A4E1B5C93D7E0A4F2C6 /* MetricDetailView.swift */,
 				7B08E7CACC2AB7A975F8DC69 /* PrivacyBadge.swift */,
 				1DEE6A25FEA42CA15C6A485A /* ScoreRing.swift */,
+				6C3A9F2B8D4E71A053B2C8D9 /* ShimmerModifier.swift */,
 				4920C9C4CA7E523327836952 /* VitalCard.swift */,
 				ED87BB67A55CD9373CD77871 /* WeeklyTrendCard.swift */,
 			);
@@ -350,7 +359,6 @@
 			);
 			mainGroup = 56B3F10FFA4C36DF7D701CB4;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -384,6 +392,8 @@
 				4ABED74A7E5005E9A130C109 /* InsightCard.swift in Sources */,
 				8CDBE4D5067CA8E993FE83FF /* InsightGenerator.swift in Sources */,
 				083BD2795B2C114A17340934 /* LabsPlaceholderView.swift in Sources */,
+				E7A4C2D19F3B586A0C2E7D41 /* MetricCard.swift in Sources */,
+				B3E8D5A27C1F40698A5B3E72 /* MetricDetailView.swift in Sources */,
 				AAF2F06CC87A2C143D05EB0D /* OnboardingView.swift in Sources */,
 				1C0CCB8391AB7C82FBC908C6 /* PreviewData.swift in Sources */,
 				0CB517801E9704AD8490CA10 /* PrivacyBadge.swift in Sources */,
@@ -392,6 +402,7 @@
 				A1F693C92EBDCF2C892A2811 /* ScoreRing.swift in Sources */,
 				AE8EE56CA5E7F00E086EBBDC /* SettingsDataService.swift in Sources */,
 				F856C98CF6F4551DD2B34141 /* SettingsView.swift in Sources */,
+				3A7E2C5F91D8B04A6E5F3C12 /* ShimmerModifier.swift in Sources */,
 				94F19BC79091E4E3F60366FA /* SettingsViewModel.swift in Sources */,
 				2B9BBC572018BE29E36B0780 /* SomatiqApp.swift in Sources */,
 				79C50638BE9F40A402C505A2 /* SomatiqAppDelegate.swift in Sources */,
@@ -437,7 +448,9 @@
 				CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8LNR79SMU8;
 				INFOPLIST_FILE = Resources/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -454,8 +467,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = 8LNR79SMU8;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -472,8 +486,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = 8LNR79SMU8;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -493,7 +508,9 @@
 				CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8LNR79SMU8;
 				INFOPLIST_FILE = Resources/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
