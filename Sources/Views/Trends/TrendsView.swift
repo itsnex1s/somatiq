@@ -1,5 +1,6 @@
 import Charts
 import SwiftUI
+import UIKit
 
 struct TrendsView: View {
     @State private var viewModel: TrendsViewModel
@@ -8,6 +9,10 @@ struct TrendsView: View {
     @State private var selectedHRVDate: Date?
     @State private var chartContentID = UUID()
     @State private var sectionsAppeared = false
+    @State private var scrollOffset: CGFloat = 0
+    @State private var lastScoreHapticDate: Date?
+    @State private var lastSleepHapticDate: Date?
+    @State private var lastHRVHapticDate: Date?
 
     @Namespace private var pickerNamespace
 
@@ -16,50 +21,62 @@ struct TrendsView: View {
     }
 
     var body: some View {
-        ZStack {
-            SomatiqColor.bg.ignoresSafeArea()
+        GeometryReader { proxy in
+            ZStack(alignment: .top) {
+                SomatiqColor.bg.ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("Trends")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(SomatiqColor.textPrimary)
-                        .modifier(TrendSectionEntrance(index: 0, appeared: sectionsAppeared))
+                ScrollView {
+                    SomatiqScrollOffsetReader(coordinateSpace: "trendsScroll")
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Trends")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundStyle(SomatiqColor.textPrimary)
+                            .modifier(TrendSectionEntrance(index: 0, appeared: sectionsAppeared))
 
-                    periodPicker
-                        .modifier(TrendSectionEntrance(index: 1, appeared: sectionsAppeared))
-                    summaryCard
-                        .modifier(TrendSectionEntrance(index: 2, appeared: sectionsAppeared))
+                        periodPicker
+                            .modifier(TrendSectionEntrance(index: 1, appeared: sectionsAppeared))
+                        summaryCard
+                            .modifier(TrendSectionEntrance(index: 2, appeared: sectionsAppeared))
 
-                    if viewModel.isLoading && viewModel.history.isEmpty {
-                        trendLoadingSkeleton
+                        if viewModel.isLoading && viewModel.history.isEmpty {
+                            trendLoadingSkeleton
+                                .transition(chartTransition)
+                        } else if let errorMessage = viewModel.errorMessage {
+                            errorCard(message: errorMessage)
+                                .transition(chartTransition)
+                        } else if viewModel.hasInsufficientData {
+                            GlassCard {
+                                Text("Collect at least \(minimumTrendPoints) days of real data to unlock trend charts.")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(SomatiqColor.textSecondary)
+                            }
                             .transition(chartTransition)
-                    } else if let errorMessage = viewModel.errorMessage {
-                        errorCard(message: errorMessage)
+                        } else {
+                            VStack(spacing: 20) {
+                                scoreTrendChart
+                                sleepBreakdownChart
+                                hrvChart
+                            }
+                            .id(chartContentID)
                             .transition(chartTransition)
-                    } else if viewModel.hasInsufficientData {
-                        GlassCard {
-                            Text("Collect at least \(minimumTrendPoints) days of real data to unlock trend charts.")
-                                .font(.system(size: 14))
-                                .foregroundStyle(SomatiqColor.textSecondary)
+                            .modifier(TrendSectionEntrance(index: 3, appeared: sectionsAppeared))
                         }
-                        .transition(chartTransition)
-                    } else {
-                        VStack(spacing: 20) {
-                            scoreTrendChart
-                            sleepBreakdownChart
-                            hrvChart
-                        }
-                        .id(chartContentID)
-                        .transition(chartTransition)
-                        .modifier(TrendSectionEntrance(index: 3, appeared: sectionsAppeared))
                     }
+                    .padding(.horizontal, SomatiqSpacing.pageHorizontal)
+                    .padding(.vertical, 16)
+                    .animation(SomatiqAnimation.chartReveal, value: viewModel.history.count)
                 }
-                .padding(.horizontal, SomatiqSpacing.pageHorizontal)
-                .padding(.vertical, 16)
-                .animation(SomatiqAnimation.chartReveal, value: viewModel.history.count)
+                .coordinateSpace(name: "trendsScroll")
+                .scrollIndicators(.hidden)
+
+                SomatiqProgressiveHeaderBar(
+                    title: "Trends",
+                    subtitle: nil,
+                    progress: headerProgress,
+                    topInset: proxy.safeAreaInsets.top
+                )
             }
-            .scrollIndicators(.hidden)
+            .onPreferenceChange(SomatiqScrollOffsetPreferenceKey.self) { scrollOffset = $0 }
         }
         .task {
             viewModel.load()
@@ -292,7 +309,11 @@ struct TrendsView: View {
                     AxisMarks(values: .automatic(desiredCount: 5))
                 }
                 .chartOverlay { proxy in
-                    selectionOverlay(proxy: proxy, selectedDate: $selectedScoreDate)
+                    selectionOverlay(
+                        proxy: proxy,
+                        selectedDate: $selectedScoreDate,
+                        hapticDate: $lastScoreHapticDate
+                    )
                 }
             }
         }
@@ -320,7 +341,11 @@ struct TrendsView: View {
                     "Core": SomatiqColor.textTertiary,
                 ])
                 .chartOverlay { proxy in
-                    selectionOverlay(proxy: proxy, selectedDate: $selectedSleepDate)
+                    selectionOverlay(
+                        proxy: proxy,
+                        selectedDate: $selectedSleepDate,
+                        hapticDate: $lastSleepHapticDate
+                    )
                 }
 
                 if let selectedEntry = selectedSleepEntry {
@@ -392,7 +417,11 @@ struct TrendsView: View {
                 }
                 .frame(height: 180)
                 .chartOverlay { proxy in
-                    selectionOverlay(proxy: proxy, selectedDate: $selectedHRVDate)
+                    selectionOverlay(
+                        proxy: proxy,
+                        selectedDate: $selectedHRVDate,
+                        hapticDate: $lastHRVHapticDate
+                    )
                 }
             }
         }
@@ -428,7 +457,11 @@ struct TrendsView: View {
     }
 
     @ViewBuilder
-    private func selectionOverlay(proxy: ChartProxy, selectedDate: Binding<Date?>) -> some View {
+    private func selectionOverlay(
+        proxy: ChartProxy,
+        selectedDate: Binding<Date?>,
+        hapticDate: Binding<Date?>
+    ) -> some View {
         GeometryReader { geometry in
             Rectangle()
                 .fill(Color.clear)
@@ -442,9 +475,24 @@ struct TrendsView: View {
                             guard xPosition >= 0, xPosition <= frame.width else {
                                 return
                             }
-                            if let date: Date = proxy.value(atX: xPosition) {
-                                selectedDate.wrappedValue = date
+                            guard let date: Date = proxy.value(atX: xPosition),
+                                  let snappedDate = nearestScore(to: date)?.date.startOfDay
+                            else {
+                                return
                             }
+
+                            let previousDay = selectedDate.wrappedValue?.startOfDay
+                            selectedDate.wrappedValue = snappedDate
+
+                            guard previousDay != snappedDate else { return }
+                            if hapticDate.wrappedValue?.startOfDay != snappedDate {
+                                UISelectionFeedbackGenerator().selectionChanged()
+                                hapticDate.wrappedValue = snappedDate
+                            }
+                        }
+                        .onEnded { _ in
+                            selectedDate.wrappedValue = nil
+                            hapticDate.wrappedValue = nil
                         }
                 )
         }
@@ -505,8 +553,12 @@ struct TrendsView: View {
         3
     }
 
+    private var headerProgress: CGFloat {
+        CGFloat(Statistics.clamped(Double((-scrollOffset - 8) / 68), min: 0, max: 1))
+    }
+
     private var chartTransition: AnyTransition {
-        .opacity.combined(with: .move(edge: .bottom))
+        .opacity.combined(with: .scale(scale: 0.992))
     }
 }
 

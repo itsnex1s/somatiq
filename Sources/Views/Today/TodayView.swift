@@ -9,7 +9,10 @@ struct TodayView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var sectionsAppeared = false
     @State private var selectedMetric: MetricKind?
+    @State private var quickPeekMetric: MetricKind?
     @State private var isJournalPresented = false
+    @State private var suppressTapAfterLongPressMetric: MetricKind?
+    @State private var scrollOffset: CGFloat = 0
 
     init(dashboardService: DashboardDataService, trendsService: TrendsDataService) {
         self.trendsService = trendsService
@@ -17,63 +20,94 @@ struct TodayView: View {
     }
 
     var body: some View {
-        ZStack {
-            SomatiqColor.bg.ignoresSafeArea()
+        GeometryReader { proxy in
+            ZStack(alignment: .top) {
+                SomatiqColor.bg.ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    header
+                ScrollView {
+                    SomatiqScrollOffsetReader(coordinateSpace: "todayScroll")
+                    VStack(alignment: .leading, spacing: 20) {
+                        header
 
-                    if viewModel.isLoading && viewModel.lastUpdated == nil {
-                        shimmerSkeleton
+                        if viewModel.isLoading && viewModel.lastUpdated == nil {
+                            shimmerSkeleton
+                                .transition(contentTransition)
+                        } else if let noDataMessage = viewModel.noDataMessage {
+                            EmptyStateView(
+                                title: "No data yet",
+                                message: noDataMessage,
+                                buttonTitle: "Connect Apple Health"
+                            ) {
+                                Task {
+                                    await viewModel.requestHealthAuthorization()
+                                    await viewModel.refresh(forceRecalculate: true)
+                                }
+                            }
                             .transition(contentTransition)
-                    } else if let noDataMessage = viewModel.noDataMessage {
-                        EmptyStateView(
-                            title: "No data yet",
-                            message: noDataMessage,
-                            buttonTitle: "Connect Apple Health"
-                        ) {
-                            Task {
-                                await viewModel.requestHealthAuthorization()
-                                await viewModel.refresh(forceRecalculate: true)
+                        } else if let errorMessage = viewModel.errorMessage {
+                            EmptyStateView(
+                                title: "Couldn't load today",
+                                message: errorMessage,
+                                buttonTitle: "Retry"
+                            ) {
+                                Task {
+                                    await viewModel.refresh(forceRecalculate: true)
+                                }
                             }
-                        }
-                        .transition(contentTransition)
-                    } else if let errorMessage = viewModel.errorMessage {
-                        EmptyStateView(
-                            title: "Couldn't load today",
-                            message: errorMessage,
-                            buttonTitle: "Retry"
-                        ) {
-                            Task {
-                                await viewModel.refresh(forceRecalculate: true)
-                            }
-                        }
-                        .transition(contentTransition)
-                    } else {
-                        metricCards
-                            .modifier(StaggeredEntrance(index: 0, appeared: sectionsAppeared, reduceMotion: reduceMotion))
+                            .transition(contentTransition)
+                        } else {
+                            metricCards
+                                .modifier(StaggeredEntrance(index: 0, appeared: sectionsAppeared, reduceMotion: reduceMotion))
 
-                        trendsSection
-                            .modifier(StaggeredEntrance(index: 1, appeared: sectionsAppeared, reduceMotion: reduceMotion))
+                            trendsSection
+                                .modifier(StaggeredEntrance(index: 1, appeared: sectionsAppeared, reduceMotion: reduceMotion))
 
-                        PrivacyBadge()
-                            .modifier(StaggeredEntrance(index: 2, appeared: sectionsAppeared, reduceMotion: reduceMotion))
+                            PrivacyBadge()
+                                .modifier(StaggeredEntrance(index: 2, appeared: sectionsAppeared, reduceMotion: reduceMotion))
+                        }
+
+                        Spacer(minLength: 90)
                     }
-
-                    Spacer(minLength: 90)
+                    .padding(.horizontal, SomatiqSpacing.pageHorizontal)
+                    .padding(.top, 8)
+                    .padding(.bottom, 24)
+                    .id(todayContentState)
+                    .animation(SomatiqAnimation.stateSwap, value: todayContentState)
                 }
-                .padding(.horizontal, SomatiqSpacing.pageHorizontal)
-                .padding(.top, 8)
-                .padding(.bottom, 24)
-                .id(todayContentState)
-                .animation(SomatiqAnimation.sectionReveal, value: todayContentState)
+                .coordinateSpace(name: "todayScroll")
+                .scrollIndicators(.hidden)
+                .refreshable {
+                    await viewModel.refresh(forceRecalculate: true)
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                }
+
+                SomatiqProgressiveHeaderBar(
+                    title: "Today",
+                    subtitle: todayDateText,
+                    progress: headerProgress,
+                    topInset: proxy.safeAreaInsets.top
+                )
+
+                if viewModel.isCalibrating {
+                    Text("Calibrating")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(SomatiqColor.warning)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            LinearGradient(
+                                colors: [Color(hex: "#1B1D2A"), Color(hex: "#10111A")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            in: Capsule()
+                        )
+                        .padding(.top, proxy.safeAreaInsets.top + 8)
+                        .padding(.trailing, 20)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
             }
-            .scrollIndicators(.hidden)
-            .refreshable {
-                await viewModel.refresh(forceRecalculate: true)
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            }
+            .onPreferenceChange(SomatiqScrollOffsetPreferenceKey.self) { scrollOffset = $0 }
         }
         .task {
             await viewModel.loadIfNeeded()
@@ -86,25 +120,6 @@ struct TodayView: View {
                 await viewModel.refresh(forceRecalculate: true)
             }
         }
-        .overlay(alignment: .topTrailing) {
-            if viewModel.isCalibrating {
-                Text("Calibrating")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(SomatiqColor.warning)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(
-                        LinearGradient(
-                            colors: [Color(hex: "#1B1D2A"), Color(hex: "#10111A")],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        in: Capsule()
-                    )
-                    .padding(.top, 8)
-                    .padding(.trailing, 20)
-            }
-        }
         .sheet(item: $selectedMetric) { metric in
             MetricDetailView(
                 kind: metric,
@@ -112,6 +127,19 @@ struct TodayView: View {
                 currentStatus: metric.extractStatus(from: viewModel),
                 trendsService: trendsService
             )
+            .presentationBackground(SomatiqColor.bg)
+        }
+        .sheet(item: $quickPeekMetric) { metric in
+            MetricQuickPeekView(
+                kind: metric,
+                currentValue: metric.extractValue(from: viewModel),
+                currentStatus: metric.extractStatus(from: viewModel),
+                weekScores: viewModel.weekScores
+            ) { selected in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    selectedMetric = selected
+                }
+            }
             .presentationBackground(SomatiqColor.bg)
         }
         .sheet(isPresented: $isJournalPresented) {
@@ -126,6 +154,10 @@ struct TodayView: View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
             ForEach(Array(MetricKind.allCases.enumerated()), id: \.element.id) { index, metric in
                 Button {
+                    if suppressTapAfterLongPressMetric == metric {
+                        suppressTapAfterLongPressMetric = nil
+                        return
+                    }
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     selectedMetric = metric
                 } label: {
@@ -136,6 +168,14 @@ struct TodayView: View {
                     )
                 }
                 .buttonStyle(.somatiqPressable)
+                .simultaneousGesture(
+                    LongPressGesture(minimumDuration: 0.38)
+                        .onEnded { _ in
+                            suppressTapAfterLongPressMetric = metric
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            quickPeekMetric = metric
+                        }
+                )
                 .modifier(StaggeredEntrance(index: index, appeared: sectionsAppeared, reduceMotion: reduceMotion))
             }
         }
@@ -245,8 +285,12 @@ struct TodayView: View {
         return .content
     }
 
+    private var headerProgress: CGFloat {
+        CGFloat(Statistics.clamped(Double((-scrollOffset - 8) / 68), min: 0, max: 1))
+    }
+
     private var contentTransition: AnyTransition {
-        .opacity.combined(with: .move(edge: .bottom))
+        .opacity.combined(with: .scale(scale: 0.99))
     }
 }
 
@@ -257,6 +301,117 @@ private enum TodayContentState: String, Hashable {
     case empty
     case error
     case content
+}
+
+private struct MetricQuickPeekView: View {
+    let kind: MetricKind
+    let currentValue: Int
+    let currentStatus: String
+    let weekScores: [DailyScore]
+    let onOpenDetails: (MetricKind) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    private var trendValues: [Double] {
+        Array(
+            kind.extractHistoryValues(from: weekScores)
+                .filter { $0 > 0 }
+                .suffix(7)
+        )
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(kind.title)
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundStyle(SomatiqColor.textPrimary)
+
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(currentValue > 0 ? "\(currentValue)" : "--")
+                                .font(.system(size: 42, weight: .bold, design: .rounded))
+                                .foregroundStyle(kind.color)
+
+                            if !kind.unit.isEmpty, currentValue > 0 {
+                                Text(kind.unit)
+                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(kind.color.opacity(0.75))
+                            }
+                        }
+
+                        Text(currentStatus)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(SomatiqColor.textSecondary)
+                    }
+
+                    if trendValues.isEmpty {
+                        Text("Need more real data to show a weekly quick trend.")
+                            .font(.system(size: 13))
+                            .foregroundStyle(SomatiqColor.textTertiary)
+                    } else {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("7-Day Quick Trend")
+                                .font(.system(size: 12, weight: .semibold))
+                                .tracking(0.6)
+                                .foregroundStyle(SomatiqColor.textMuted)
+
+                            HStack(alignment: .bottom, spacing: 8) {
+                                let maxValue = max(trendValues.max() ?? 1, 1)
+                                ForEach(Array(trendValues.enumerated()), id: \.offset) { _, value in
+                                    let normalized = max(0.16, value / maxValue)
+                                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [kind.color.opacity(0.45), kind.color],
+                                                startPoint: .bottom,
+                                                endPoint: .top
+                                            )
+                                        )
+                                        .frame(width: 16, height: 72 * normalized)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(height: 80, alignment: .bottom)
+                        }
+                    }
+
+                    Button("Open Full Report") {
+                        dismiss()
+                        onOpenDetails(kind)
+                    }
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient(
+                            colors: [kind.color, kind.color.opacity(0.76)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(Capsule())
+                    .buttonStyle(.somatiqPressable)
+                    .padding(.top, 4)
+                }
+                .padding(.horizontal, SomatiqSpacing.pageHorizontal)
+                .padding(.vertical, 20)
+            }
+            .scrollIndicators(.hidden)
+            .background(SomatiqColor.bg.ignoresSafeArea())
+            .navigationTitle("Quick Peek")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
 }
 
 private struct StaggeredEntrance: ViewModifier {
@@ -287,6 +442,46 @@ private enum JournalMode: String, CaseIterable, Identifiable {
             return "Timeline"
         case .calendar:
             return "Calendar"
+        }
+    }
+}
+
+private enum JournalTag: String, CaseIterable, Identifiable {
+    case stressSpike
+    case sleepDebt
+    case lowBattery
+    case recoveryDay
+    case lowHRV
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .stressSpike: return "Stress Spike"
+        case .sleepDebt: return "Sleep Debt"
+        case .lowBattery: return "Low Battery"
+        case .recoveryDay: return "Recovery"
+        case .lowHRV: return "Low HRV"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .stressSpike: return "bolt.fill"
+        case .sleepDebt: return "moon.zzz.fill"
+        case .lowBattery: return "battery.25"
+        case .recoveryDay: return "figure.cooldown"
+        case .lowHRV: return "heart.slash.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .stressSpike: return SomatiqColor.stress
+        case .sleepDebt: return SomatiqColor.sleep
+        case .lowBattery: return SomatiqColor.bodyBattery
+        case .recoveryDay: return SomatiqColor.success
+        case .lowHRV: return SomatiqColor.heart
         }
     }
 }
@@ -333,6 +528,28 @@ private struct JournalDaySummary: Identifiable, Hashable {
 
     var dayLabel: String {
         date.formatted(.dateTime.weekday(.wide).day().month(.wide))
+    }
+
+    var tags: [JournalTag] {
+        var result: [JournalTag] = []
+
+        if stress >= 70 {
+            result.append(.stressSpike)
+        }
+        if sleep <= 45 {
+            result.append(.sleepDebt)
+        }
+        if bodyBattery <= 40 {
+            result.append(.lowBattery)
+        }
+        if overallScore >= 78 {
+            result.append(.recoveryDay)
+        }
+        if hrv > 0 && hrv < 35 {
+            result.append(.lowHRV)
+        }
+
+        return result
     }
 
     init(score: DailyScore) {
@@ -385,6 +602,7 @@ private final class JournalViewModel {
 private struct JournalView: View {
     @State private var viewModel: JournalViewModel
     @State private var mode: JournalMode = .timeline
+    @State private var selectedTag: JournalTag?
     @State private var displayedMonth = Date()
     @State private var selectedDay: JournalDaySummary?
     @Environment(\.dismiss) private var dismiss
@@ -401,6 +619,10 @@ private struct JournalView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         modePicker
+
+                        if mode == .timeline, !availableTags.isEmpty {
+                            tagFilterRow
+                        }
 
                         if viewModel.isLoading {
                             ProgressView()
@@ -499,10 +721,106 @@ private struct JournalView: View {
         }
     }
 
+    private var tagFilterRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                filterChip(
+                    title: "All",
+                    icon: "line.3.horizontal.decrease.circle",
+                    tint: SomatiqColor.textSecondary,
+                    isActive: selectedTag == nil
+                ) {
+                    withAnimation(SomatiqAnimation.stateSwap) {
+                        selectedTag = nil
+                    }
+                }
+
+                ForEach(availableTags) { tag in
+                    filterChip(
+                        title: tag.title,
+                        icon: tag.icon,
+                        tint: tag.color,
+                        isActive: selectedTag == tag
+                    ) {
+                        withAnimation(SomatiqAnimation.stateSwap) {
+                            selectedTag = (selectedTag == tag) ? nil : tag
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func filterChip(
+        title: String,
+        icon: String,
+        tint: Color,
+        isActive: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(isActive ? .white : tint)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background {
+                    Capsule(style: .continuous)
+                        .fill(
+                            isActive
+                                ? LinearGradient(
+                                    colors: [SomatiqColor.accent, SomatiqColor.sleep],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                                : LinearGradient(
+                                    colors: [Color(hex: "#1B1D2A"), Color(hex: "#10111A")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                        )
+                }
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.14), Color.white.opacity(0.06)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.7
+                        )
+                }
+        }
+        .buttonStyle(.somatiqPressable)
+    }
+
+    private var availableTags: [JournalTag] {
+        JournalTag.allCases.filter { tag in
+            viewModel.entries.contains(where: { $0.tags.contains(tag) })
+        }
+    }
+
+    private var filteredEntries: [JournalDaySummary] {
+        guard let selectedTag else { return viewModel.entries }
+        return viewModel.entries.filter { $0.tags.contains(selectedTag) }
+    }
+
     private var timelineContent: some View {
-        LazyVStack(spacing: 12) {
-            ForEach(viewModel.entries) { entry in
-                timelineCard(for: entry)
+        Group {
+            if filteredEntries.isEmpty {
+                GlassCard {
+                    Text("No entries match this filter yet.")
+                        .font(.system(size: 14))
+                        .foregroundStyle(SomatiqColor.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else {
+                LazyVStack(spacing: 12) {
+                    ForEach(filteredEntries) { entry in
+                        timelineCard(for: entry)
+                    }
+                }
             }
         }
     }
@@ -533,6 +851,19 @@ private struct JournalView: View {
                     summaryValue(title: "Sleep", value: "\(entry.sleep)", tint: SomatiqColor.sleep)
                     summaryValue(title: "Battery", value: "\(entry.bodyBattery)", tint: SomatiqColor.bodyBattery)
                     summaryValue(title: "Avg", value: "\(entry.overallScore)", tint: entry.statusColor)
+                }
+
+                if !entry.tags.isEmpty {
+                    HStack(spacing: 6) {
+                        ForEach(entry.tags.prefix(3)) { tag in
+                            Label(tag.title, systemImage: tag.icon)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(tag.color)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 4)
+                                .background(tag.color.opacity(0.14), in: Capsule(style: .continuous))
+                        }
+                    }
                 }
             }
         }

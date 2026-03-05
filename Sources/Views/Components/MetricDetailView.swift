@@ -1,5 +1,6 @@
 import Charts
 import SwiftUI
+import UIKit
 
 struct MetricDetailView: View {
     let kind: MetricKind
@@ -13,6 +14,7 @@ struct MetricDetailView: View {
     @State private var selectedPeriod: TrendPeriod = .days7
     @State private var history: [DailyScore] = []
     @State private var selectedDate: Date?
+    @State private var lastSelectionHapticDate: Date?
 
     var body: some View {
         ZStack {
@@ -256,12 +258,25 @@ struct MetricDetailView: View {
                                     let frame = geometry[plotFrame]
                                     let x = value.location.x - frame.origin.x
                                     guard x >= 0, x <= frame.width else { return }
-                                    if let date: Date = proxy.value(atX: x) {
-                                        selectedDate = date
+
+                                    guard let date: Date = proxy.value(atX: x),
+                                          let snappedDate = nearestEntry(to: date)?.date.startOfDay
+                                    else {
+                                        return
+                                    }
+
+                                    let previousDay = selectedDate?.startOfDay
+                                    selectedDate = snappedDate
+
+                                    guard previousDay != snappedDate else { return }
+                                    if lastSelectionHapticDate?.startOfDay != snappedDate {
+                                        UISelectionFeedbackGenerator().selectionChanged()
+                                        lastSelectionHapticDate = snappedDate
                                     }
                                 }
                                 .onEnded { _ in
                                     selectedDate = nil
+                                    lastSelectionHapticDate = nil
                                 }
                         )
                 }
@@ -355,9 +370,13 @@ struct MetricDetailView: View {
     }
 
     private var selectedEntry: DailyScore? {
-        guard let selectedDate else { return nil }
+        nearestEntry(to: selectedDate)
+    }
+
+    private func nearestEntry(to date: Date?) -> DailyScore? {
+        guard let date else { return nil }
         return chartHistory.min {
-            abs($0.date.timeIntervalSince(selectedDate)) < abs($1.date.timeIntervalSince(selectedDate))
+            abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date))
         }
     }
 

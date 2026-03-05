@@ -117,9 +117,90 @@ enum SomatiqAnimation {
     static let sectionReveal = Animation.spring(duration: 0.45, bounce: 0.1)
     static let chartReveal = Animation.easeOut(duration: 0.35)
     static let press = Animation.spring(duration: 0.22, bounce: 0.25)
+    static let stateSwap = Animation.easeInOut(duration: 0.24)
 
     static func staggered(index: Int) -> Animation {
         cardEntrance.delay(Double(index) * 0.08)
+    }
+}
+
+// MARK: - Scroll helpers
+
+struct SomatiqScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+struct SomatiqScrollOffsetReader: View {
+    let coordinateSpace: String
+
+    var body: some View {
+        GeometryReader { proxy in
+            Color.clear
+                .preference(
+                    key: SomatiqScrollOffsetPreferenceKey.self,
+                    value: proxy.frame(in: .named(coordinateSpace)).minY
+                )
+        }
+        .frame(height: 0)
+    }
+}
+
+// MARK: - Progressive top header
+
+struct SomatiqProgressiveHeaderBar: View {
+    let title: String
+    let subtitle: String?
+    let progress: CGFloat
+    let topInset: CGFloat
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: topInset)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(SomatiqColor.textPrimary)
+
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(SomatiqColor.textTertiary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, SomatiqSpacing.pageHorizontal)
+            .padding(.bottom, 8)
+        }
+        .frame(height: topInset + 56, alignment: .top)
+        .background {
+            ZStack(alignment: .bottom) {
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                SomatiqColor.bg.opacity(0.96),
+                                SomatiqColor.bg.opacity(0.86),
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                Rectangle()
+                    .fill(Color.white.opacity(0.08))
+                    .frame(height: 0.6)
+            }
+        }
+        .opacity(progress)
+        .animation(SomatiqAnimation.stateSwap, value: progress)
+        .ignoresSafeArea(edges: .top)
+        .allowsHitTesting(false)
     }
 }
 

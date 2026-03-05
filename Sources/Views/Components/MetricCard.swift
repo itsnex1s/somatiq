@@ -20,7 +20,7 @@ enum MetricKind: CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .bodyBattery: "battery.100percent"
-        case .stress: "bolt.heart.fill"
+        case .stress: "brain.head.profile"
         case .sleep: "moon.stars.fill"
         case .heart: "heart.fill"
         }
@@ -247,8 +247,7 @@ struct MetricCard: View {
                 .frame(width: 30, height: 30)
                 .offset(x: -10, y: -11)
 
-            Image(systemName: kind.icon)
-                .font(.system(size: 17, weight: .bold))
+            metricIcon
                 .foregroundStyle(Color.white.opacity(0.96))
                 .shadow(color: kind.color.opacity(0.75), radius: 5, x: 0, y: 1)
         }
@@ -259,8 +258,23 @@ struct MetricCard: View {
         CGFloat(Statistics.clamped(Double(value) / 100, min: 0, max: 1))
     }
 
+    @ViewBuilder
+    private var metricIcon: some View {
+        if kind == .bodyBattery {
+            HStack(spacing: 3) {
+                Image(systemName: "person.fill")
+                    .font(.system(size: 10, weight: .bold))
+                Image(systemName: "battery.100")
+                    .font(.system(size: 11, weight: .bold))
+            }
+        } else {
+            Image(systemName: kind.icon)
+                .font(.system(size: 17, weight: .bold))
+        }
+    }
+
     private var titleTrailingPadding: CGFloat {
-        kind == .bodyBattery ? 106 : 82
+        82
     }
 
     private var valueText: String {

@@ -4,6 +4,7 @@ struct SettingsView: View {
     @State private var viewModel: SettingsViewModel
     @State private var showingWatchPairingHelp = false
     @State private var sectionsAppeared = false
+    @State private var scrollOffset: CGFloat = 0
 
     init(settingsService: SettingsDataService) {
         _viewModel = State(initialValue: SettingsViewModel(settingsService: settingsService))
@@ -11,38 +12,50 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                SomatiqColor.bg.ignoresSafeArea()
+            GeometryReader { proxy in
+                ZStack(alignment: .top) {
+                    SomatiqColor.bg.ignoresSafeArea()
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        header
-                            .modifier(SettingsSectionEntrance(index: 0, appeared: sectionsAppeared))
-                        sectionTitle("Profile")
-                            .modifier(SettingsSectionEntrance(index: 1, appeared: sectionsAppeared))
-                        profileCard
-                            .modifier(SettingsSectionEntrance(index: 2, appeared: sectionsAppeared))
-                        sectionTitle("Health Data")
-                            .modifier(SettingsSectionEntrance(index: 3, appeared: sectionsAppeared))
-                        healthCard
-                            .modifier(SettingsSectionEntrance(index: 4, appeared: sectionsAppeared))
-                        sectionTitle("About")
-                            .modifier(SettingsSectionEntrance(index: 5, appeared: sectionsAppeared))
-                        aboutCard
-                            .modifier(SettingsSectionEntrance(index: 6, appeared: sectionsAppeared))
+                    ScrollView {
+                        SomatiqScrollOffsetReader(coordinateSpace: "settingsScroll")
+                        VStack(alignment: .leading, spacing: 20) {
+                            header
+                                .modifier(SettingsSectionEntrance(index: 0, appeared: sectionsAppeared))
+                            sectionTitle("Profile")
+                                .modifier(SettingsSectionEntrance(index: 1, appeared: sectionsAppeared))
+                            profileCard
+                                .modifier(SettingsSectionEntrance(index: 2, appeared: sectionsAppeared))
+                            sectionTitle("Health Data")
+                                .modifier(SettingsSectionEntrance(index: 3, appeared: sectionsAppeared))
+                            healthCard
+                                .modifier(SettingsSectionEntrance(index: 4, appeared: sectionsAppeared))
+                            sectionTitle("About")
+                                .modifier(SettingsSectionEntrance(index: 5, appeared: sectionsAppeared))
+                            aboutCard
+                                .modifier(SettingsSectionEntrance(index: 6, appeared: sectionsAppeared))
 
-                        if let errorMessage = viewModel.errorMessage {
-                            statusCard(message: errorMessage)
-                                .modifier(SettingsSectionEntrance(index: 7, appeared: sectionsAppeared))
+                            if let errorMessage = viewModel.errorMessage {
+                                statusCard(message: errorMessage)
+                                    .modifier(SettingsSectionEntrance(index: 7, appeared: sectionsAppeared))
+                            }
+
+                            Spacer(minLength: 90)
                         }
-
-                        Spacer(minLength: 90)
+                        .padding(.horizontal, SomatiqSpacing.pageHorizontal)
+                        .padding(.top, 10)
+                        .padding(.bottom, 24)
                     }
-                    .padding(.horizontal, SomatiqSpacing.pageHorizontal)
-                    .padding(.top, 10)
-                    .padding(.bottom, 24)
+                    .coordinateSpace(name: "settingsScroll")
+                    .scrollIndicators(.hidden)
+
+                    SomatiqProgressiveHeaderBar(
+                        title: "Settings",
+                        subtitle: nil,
+                        progress: headerProgress,
+                        topInset: proxy.safeAreaInsets.top
+                    )
                 }
-                .scrollIndicators(.hidden)
+                .onPreferenceChange(SomatiqScrollOffsetPreferenceKey.self) { scrollOffset = $0 }
             }
             .task {
                 viewModel.load()
@@ -359,6 +372,10 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private var headerProgress: CGFloat {
+        CGFloat(Statistics.clamped(Double((-scrollOffset - 8) / 68), min: 0, max: 1))
     }
 }
 
