@@ -18,11 +18,9 @@
 		1BB65FE091D091FA5D0F0D6C /* AIModelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D1504676CBD035D6332E43 /* AIModelManager.swift */; };
 		1C0CCB8391AB7C82FBC908C6 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC3879C7804BA9AF58135E0 /* PreviewData.swift */; };
 		1E3F9E8EDC5ECB8B68C01AAE /* BaselineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33DCCA44345994E7F7D9BE17 /* BaselineService.swift */; };
-		1EA2FE45E694EDC99C2879FC /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 7F2F48D5F59A7C51B16EEF29 /* MLXLLM */; };
 		209782366128F65F947E5CD7 /* TrendsDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3640747F7FA4B961E70E97DC /* TrendsDataService.swift */; };
 		28C3E521F9981C07535D9245 /* DailyScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77F56C1915EAA6A175D5AC7B /* DailyScore.swift */; };
 		2B9BBC572018BE29E36B0780 /* SomatiqApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3FE5090EA5FDA851D08B027 /* SomatiqApp.swift */; };
-		2CA8A4A8D49EA4F1C5D7DCC4 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AB436832CFF8C5F71232EF40 /* MLXLMCommon */; };
 		2CAF15E6F19C7F8FE531E0F9 /* AnalysesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C21C3BCF39CAA3A3CAFF99F /* AnalysesView.swift */; };
 		31D0864830D3110DC1BC1A7B /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F19B3E71215CB170063A4CC /* GlassCard.swift */; };
 		32550F3F6450C700CFAEF998 /* AppModelContainerFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32ECD06E0344E8AE6E5674D /* AppModelContainerFactory.swift */; };
@@ -147,15 +145,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		3ABED4EA416B2114C81FAAE1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1EA2FE45E694EDC99C2879FC /* MLXLLM in Frameworks */,
-				2CA8A4A8D49EA4F1C5D7DCC4 /* MLXLMCommon in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+			3ABED4EA416B2114C81FAAE1 /* Frameworks */ = {
+				isa = PBXFrameworksBuildPhase;
+				buildActionMask = 2147483647;
+				files = (
+				);
+				runOnlyForDeploymentPostprocessing = 0;
+			};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -385,12 +381,10 @@
 			);
 			dependencies = (
 			);
-			name = Somatiq;
-			packageProductDependencies = (
-				7F2F48D5F59A7C51B16EEF29 /* MLXLLM */,
-				AB436832CFF8C5F71232EF40 /* MLXLMCommon */,
-			);
-			productName = Somatiq;
+				name = Somatiq;
+				packageProductDependencies = (
+				);
+				productName = Somatiq;
 			productReference = 01F0B75B2177635667F42AE0 /* Somatiq.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -532,12 +526,13 @@
 /* Begin XCBuildConfiguration section */
 		421004D26090E305566D977C /* Debug */ = {
 			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = Resources/Info.plist;
+				buildSettings = {
+					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+					CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
+					CODE_SIGN_IDENTITY = "iPhone Developer";
+					DEVELOPMENT_TEAM = 8LNR79SMU8;
+					CURRENT_PROJECT_VERSION = 1;
+					INFOPLIST_FILE = Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -552,10 +547,11 @@
 		};
 		4AC6AF92DF82BA7A83D2201B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				buildSettings = {
+					BUNDLE_LOADER = "$(TEST_HOST)";
+					DEVELOPMENT_TEAM = 8LNR79SMU8;
+					GENERATE_INFOPLIST_FILE = YES;
+					IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -570,10 +566,11 @@
 		};
 		5CDA121EB816A411F2731B7B /* Release */ = {
 			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				buildSettings = {
+					BUNDLE_LOADER = "$(TEST_HOST)";
+					DEVELOPMENT_TEAM = 8LNR79SMU8;
+					GENERATE_INFOPLIST_FILE = YES;
+					IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -588,12 +585,13 @@
 		};
 		6B9BFEDF8E3D7EA3E23B4618 /* Release */ = {
 			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = Resources/Info.plist;
+				buildSettings = {
+					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+					CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
+					CODE_SIGN_IDENTITY = "iPhone Developer";
+					DEVELOPMENT_TEAM = 8LNR79SMU8;
+					CURRENT_PROJECT_VERSION = 1;
+					INFOPLIST_FILE = Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
