@@ -57,6 +57,30 @@ final class StorageService {
         return try context.fetch(descriptor)
     }
 
+    func fetchWellnessReports(limit: Int = 120) throws -> [WellnessReport] {
+        var descriptor = FetchDescriptor<WellnessReport>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = max(limit, 1)
+        return try context.fetch(descriptor)
+    }
+
+    func fetchWellnessReports(on date: Date) throws -> [WellnessReport] {
+        let day = date.startOfDay
+        let descriptor = FetchDescriptor<WellnessReport>(
+            predicate: #Predicate { report in
+                report.day == day
+            },
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        return try context.fetch(descriptor)
+    }
+
+    func insertWellnessReport(_ report: WellnessReport) throws {
+        context.insert(report)
+        try context.save()
+    }
+
     func fetchBedtimes(days: Int) throws -> [Date] {
         let scores = try fetchDailyScores(days: days)
         return scores.compactMap(\.bedtimeAt)

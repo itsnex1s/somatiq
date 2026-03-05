@@ -4,6 +4,7 @@ import SwiftData
 struct DashboardSnapshot {
     let today: DailyScore
     let weekScores: [DailyScore]
+    let reports: [WellnessReport]
     let isCalibrating: Bool
 }
 
@@ -14,13 +15,16 @@ final class DashboardDataService {
     private let healthDataProvider: any HealthDataProviding
     private let scoreEngine: ScoreEngine
     private let insightGenerator: InsightGenerator
+    private let reportService: WellnessReportService
+    private let reportNotifier: any ReportNotifying
     private let hrvLookbackWindows = [24, 72, 168]
 
     init(
         context: ModelContext,
         healthDataProvider: any HealthDataProviding = HealthKitService(),
         scoreEngine: ScoreEngine = ScoreEngine(),
-        insightGenerator: InsightGenerator = InsightGenerator()
+        insightGenerator: InsightGenerator = InsightGenerator(),
+        reportNotifier: any ReportNotifying = NoopReportNotificationService()
     ) {
         let storage = StorageService(context: context)
         self.storage = storage
@@ -28,6 +32,8 @@ final class DashboardDataService {
         self.healthDataProvider = healthDataProvider
         self.scoreEngine = scoreEngine
         self.insightGenerator = insightGenerator
+        reportService = WellnessReportService(storage: storage)
+        self.reportNotifier = reportNotifier
     }
 
     func authorizeHealth() async throws {
@@ -43,12 +49,14 @@ final class DashboardDataService {
         }
 
         let weekScores = try storage.fetchDailyScores(days: 7)
+        let reports = try reportService.fetchRecentReports(limit: 180)
         let baseline = try baselineService.baselineValue(for: .sdnn)
         let isCalibrating = baseline == BaselineMetric.sdnn.populationDefault
 
         return DashboardSnapshot(
             today: todayScore,
             weekScores: weekScores,
+            reports: reports,
             isCalibrating: isCalibrating
         )
     }
@@ -176,6 +184,15 @@ final class DashboardDataService {
 
         try storage.upsertDailyScore(todayScore)
         try baselineService.recalculateBaselines()
+
+        do {
+            if let report = try reportService.generateReportIfNeeded(for: todayScore, source: batterySource) {
+                await reportNotifier.notify(report: report)
+            }
+        } catch {
+            AppLog.error("DashboardDataService.generateReportIfNeeded", error: error)
+        }
+
         return todayScore
     }
 

@@ -27,6 +27,7 @@ final class TodayViewModel {
     var isCalibrating = false
 
     var weekScores: [DailyScore] = []
+    var reports: [WellnessReport] = []
 
     var restingHRTrend: VitalTrend = .neutral("--")
     var hrvTrend: VitalTrend = .neutral("--")
@@ -75,6 +76,7 @@ final class TodayViewModel {
             let snapshot = try await dashboardService.fetchSnapshot(forceRecalculate: forceRecalculate)
             apply(score: snapshot.today)
             weekScores = snapshot.weekScores
+            reports = snapshot.reports
             isCalibrating = snapshot.isCalibrating
             calculateTrends()
         } catch {

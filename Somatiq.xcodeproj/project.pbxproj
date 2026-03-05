@@ -3,10 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		013AF61FC8F1D904917CD908 /* WellnessReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C074680F49B2C733FEE11A /* WellnessReportService.swift */; };
 		083BD2795B2C114A17340934 /* LabsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4C44EA531E1688CA8F56D1 /* LabsPlaceholderView.swift */; };
 		0CB517801E9704AD8490CA10 /* PrivacyBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B08E7CACC2AB7A975F8DC69 /* PrivacyBadge.swift */; };
 		1452FF00488402DADDA49C04 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 852292E34CE51C51ECC1BE13 /* EmptyStateView.swift */; };
@@ -21,7 +22,7 @@
 		32550F3F6450C700CFAEF998 /* AppModelContainerFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32ECD06E0344E8AE6E5674D /* AppModelContainerFactory.swift */; };
 		3648E371EA046D981DD6ACB9 /* AnimatedNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F9369923F438B60537CAE1 /* AnimatedNumber.swift */; };
 		37E52250AD950A1A2BE66CA6 /* DashboardDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9C89410A7A04B4D88E465DE /* DashboardDataService.swift */; };
-		3A7E2C5F91D8B04A6E5F3C12 /* ShimmerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C3A9F2B8D4E71A053B2C8D9 /* ShimmerModifier.swift */; };
+		41E09527F9CC217ED4D8EC40 /* ShimmerModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191E51888CDDEFABA1307F0E /* ShimmerModifier.swift */; };
 		468A5F0ADD4E3D2618762698 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C788663B4CC69DDAABF5BE3A /* Date+Extensions.swift */; };
 		4ABED74A7E5005E9A130C109 /* InsightCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A27E6E5A20109EA02D980D /* InsightCard.swift */; };
 		514542097BAC568C5780A702 /* AppErrorMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EEF863636FBC8C4D73FCE51 /* AppErrorMapper.swift */; };
@@ -32,6 +33,7 @@
 		73DC6A98AF871FB7A85EA154 /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C0E2D2784B3AB4626BE989 /* HealthKitService.swift */; };
 		79C50638BE9F40A402C505A2 /* SomatiqAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F645195EB71665E7FF514C0 /* SomatiqAppDelegate.swift */; };
 		7C5002140AB19194B8C73A8A /* VitalCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4920C9C4CA7E523327836952 /* VitalCard.swift */; };
+		89DE26A6B0AC7A7CC4BFCD51 /* MetricCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 719A3E1B9A07EE40B58282D3 /* MetricCard.swift */; };
 		8CDBE4D5067CA8E993FE83FF /* InsightGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526465A621D0A53144923CF7 /* InsightGenerator.swift */; };
 		8E000EEE9080EB44216DA8F0 /* TrendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341AC1D6AD3BFF3AF0E26758 /* TrendsView.swift */; };
 		8F6918072D513164BC154FB7 /* ScoreEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 713A44A3A508BB17E9057E04 /* ScoreEngineTests.swift */; };
@@ -43,16 +45,16 @@
 		AAF2F06CC87A2C143D05EB0D /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F97CD53CF3E5D6077D1CD8E /* OnboardingView.swift */; };
 		AE8EE56CA5E7F00E086EBBDC /* SettingsDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 981677700FFBE263746153A2 /* SettingsDataService.swift */; };
 		AEFF823614AA77F36A66587A /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ABD6DF7E857AFF47FF9EE2F /* RootTabView.swift */; };
+		B17EB7F536F5A95590CA0743 /* MetricDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D22F3FB18ECE19540969EEF /* MetricDetailView.swift */; };
 		B655A297F06B778D5062D0DA /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C779AF4F00F303FF754FA /* TodayView.swift */; };
 		C3367645D6514A60A2891763 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A41428C862FA3BD5D630DF8 /* Theme.swift */; };
 		CD57440DD54D3194327F3FEF /* HealthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DBF4EF53108AB38362610DC /* HealthModels.swift */; };
+		CEB9B651CC9442EEE96B97B2 /* WellnessReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298D23D1C84998154BC6F09A /* WellnessReport.swift */; };
 		DD3EAA02ED0EB9F11EAD7EDA /* ErrorAlertModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73CD527256BE6C42992C181 /* ErrorAlertModifier.swift */; };
 		E39DA9E3D95791EC0AD4EFD9 /* TrendsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4351F56B547508B528428EBE /* TrendsViewModel.swift */; };
 		F3398F16153B739217635F18 /* UserBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31695A1414490A5469256C85 /* UserBaseline.swift */; };
 		F4EF51E067303BFFA4E1AC5D /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF40CBA77ABBB01E5B65B7E4 /* TodayViewModel.swift */; };
 		F856C98CF6F4551DD2B34141 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4744484D73E7CD4CE14E2355 /* SettingsView.swift */; };
-		E7A4C2D19F3B586A0C2E7D41 /* MetricCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A1D3E8B7C9F20A4D6B8E1F3 /* MetricCard.swift */; };
-		B3E8D5A27C1F40698A5B3E72 /* MetricDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2F6A4E1B5C93D7E0A4F2C6 /* MetricDetailView.swift */; };
 		FDCC8C64CD44811B56B0F78E /* ScoreEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8C07C0901E9E06216FC4C3 /* ScoreEngine.swift */; };
 /* End PBXBuildFile section */
 
@@ -68,12 +70,14 @@
 
 /* Begin PBXFileReference section */
 		01705151195DA0C659EDFB64 /* AppDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDependencies.swift; sourceTree = "<group>"; };
-		01F0B75B2177635667F42AE0 /* Somatiq.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Somatiq.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		01F0B75B2177635667F42AE0 /* Somatiq.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Somatiq.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		04C0E2D2784B3AB4626BE989 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
 		0A8C07C0901E9E06216FC4C3 /* ScoreEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEngine.swift; sourceTree = "<group>"; };
-		0FF81B2A8FEB58BA92B07A8C /* SomatiqTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SomatiqTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0FF81B2A8FEB58BA92B07A8C /* SomatiqTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SomatiqTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		10A70CD64450DAA4E1770EA8 /* ServiceLayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceLayerTests.swift; sourceTree = "<group>"; };
+		191E51888CDDEFABA1307F0E /* ShimmerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerModifier.swift; sourceTree = "<group>"; };
 		1DEE6A25FEA42CA15C6A485A /* ScoreRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreRing.swift; sourceTree = "<group>"; };
+		298D23D1C84998154BC6F09A /* WellnessReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WellnessReport.swift; sourceTree = "<group>"; };
 		2F4C44EA531E1688CA8F56D1 /* LabsPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabsPlaceholderView.swift; sourceTree = "<group>"; };
 		2F645195EB71665E7FF514C0 /* SomatiqAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SomatiqAppDelegate.swift; sourceTree = "<group>"; };
 		31695A1414490A5469256C85 /* UserBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserBaseline.swift; sourceTree = "<group>"; };
@@ -90,16 +94,16 @@
 		526465A621D0A53144923CF7 /* InsightGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightGenerator.swift; sourceTree = "<group>"; };
 		5FDE9AA73396C303B5716404 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
 		661436628CE42A05465BD0D5 /* Statistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Statistics.swift; sourceTree = "<group>"; };
-		5A1D3E8B7C9F20A4D6B8E1F3 /* MetricCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCard.swift; sourceTree = "<group>"; };
-		6C3A9F2B8D4E71A053B2C8D9 /* ShimmerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerModifier.swift; sourceTree = "<group>"; };
 		713A44A3A508BB17E9057E04 /* ScoreEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEngineTests.swift; sourceTree = "<group>"; };
+		719A3E1B9A07EE40B58282D3 /* MetricCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCard.swift; sourceTree = "<group>"; };
 		77F56C1915EAA6A175D5AC7B /* DailyScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyScore.swift; sourceTree = "<group>"; };
+		78C074680F49B2C733FEE11A /* WellnessReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WellnessReportService.swift; sourceTree = "<group>"; };
 		7B08E7CACC2AB7A975F8DC69 /* PrivacyBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyBadge.swift; sourceTree = "<group>"; };
 		852292E34CE51C51ECC1BE13 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
-		8D2F6A4E1B5C93D7E0A4F2C6 /* MetricDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailView.swift; sourceTree = "<group>"; };
 		8A41428C862FA3BD5D630DF8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		981677700FFBE263746153A2 /* SettingsDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDataService.swift; sourceTree = "<group>"; };
 		9ABD6DF7E857AFF47FF9EE2F /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
+		9D22F3FB18ECE19540969EEF /* MetricDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricDetailView.swift; sourceTree = "<group>"; };
 		9F19B3E71215CB170063A4CC /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		A0F9369923F438B60537CAE1 /* AnimatedNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedNumber.swift; sourceTree = "<group>"; };
 		A63E56B75939B115DE2E3948 /* AppLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLog.swift; sourceTree = "<group>"; };
@@ -173,6 +177,7 @@
 				4DBF4EF53108AB38362610DC /* HealthModels.swift */,
 				31695A1414490A5469256C85 /* UserBaseline.swift */,
 				B409F8644121D3BB9ED5F5EE /* UserPreferences.swift */,
+				298D23D1C84998154BC6F09A /* WellnessReport.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -194,11 +199,11 @@
 				D73CD527256BE6C42992C181 /* ErrorAlertModifier.swift */,
 				9F19B3E71215CB170063A4CC /* GlassCard.swift */,
 				43A27E6E5A20109EA02D980D /* InsightCard.swift */,
-				5A1D3E8B7C9F20A4D6B8E1F3 /* MetricCard.swift */,
-				8D2F6A4E1B5C93D7E0A4F2C6 /* MetricDetailView.swift */,
+				719A3E1B9A07EE40B58282D3 /* MetricCard.swift */,
+				9D22F3FB18ECE19540969EEF /* MetricDetailView.swift */,
 				7B08E7CACC2AB7A975F8DC69 /* PrivacyBadge.swift */,
 				1DEE6A25FEA42CA15C6A485A /* ScoreRing.swift */,
-				6C3A9F2B8D4E71A053B2C8D9 /* ShimmerModifier.swift */,
+				191E51888CDDEFABA1307F0E /* ShimmerModifier.swift */,
 				4920C9C4CA7E523327836952 /* VitalCard.swift */,
 				ED87BB67A55CD9373CD77871 /* WeeklyTrendCard.swift */,
 			);
@@ -247,6 +252,7 @@
 				981677700FFBE263746153A2 /* SettingsDataService.swift */,
 				B1505AE4A9CF058E1D875F1B /* StorageService.swift */,
 				3640747F7FA4B961E70E97DC /* TrendsDataService.swift */,
+				78C074680F49B2C733FEE11A /* WellnessReportService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -359,6 +365,7 @@
 			);
 			mainGroup = 56B3F10FFA4C36DF7D701CB4;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -392,8 +399,8 @@
 				4ABED74A7E5005E9A130C109 /* InsightCard.swift in Sources */,
 				8CDBE4D5067CA8E993FE83FF /* InsightGenerator.swift in Sources */,
 				083BD2795B2C114A17340934 /* LabsPlaceholderView.swift in Sources */,
-				E7A4C2D19F3B586A0C2E7D41 /* MetricCard.swift in Sources */,
-				B3E8D5A27C1F40698A5B3E72 /* MetricDetailView.swift in Sources */,
+				89DE26A6B0AC7A7CC4BFCD51 /* MetricCard.swift in Sources */,
+				B17EB7F536F5A95590CA0743 /* MetricDetailView.swift in Sources */,
 				AAF2F06CC87A2C143D05EB0D /* OnboardingView.swift in Sources */,
 				1C0CCB8391AB7C82FBC908C6 /* PreviewData.swift in Sources */,
 				0CB517801E9704AD8490CA10 /* PrivacyBadge.swift in Sources */,
@@ -402,8 +409,8 @@
 				A1F693C92EBDCF2C892A2811 /* ScoreRing.swift in Sources */,
 				AE8EE56CA5E7F00E086EBBDC /* SettingsDataService.swift in Sources */,
 				F856C98CF6F4551DD2B34141 /* SettingsView.swift in Sources */,
-				3A7E2C5F91D8B04A6E5F3C12 /* ShimmerModifier.swift in Sources */,
 				94F19BC79091E4E3F60366FA /* SettingsViewModel.swift in Sources */,
+				41E09527F9CC217ED4D8EC40 /* ShimmerModifier.swift in Sources */,
 				2B9BBC572018BE29E36B0780 /* SomatiqApp.swift in Sources */,
 				79C50638BE9F40A402C505A2 /* SomatiqAppDelegate.swift in Sources */,
 				9227A9A96D88CE319423EFDA /* Statistics.swift in Sources */,
@@ -418,6 +425,8 @@
 				59CCA61B168478256054500D /* UserPreferences.swift in Sources */,
 				7C5002140AB19194B8C73A8A /* VitalCard.swift in Sources */,
 				661B08ADEE4A665BB8FD2C2F /* WeeklyTrendCard.swift in Sources */,
+				CEB9B651CC9442EEE96B97B2 /* WellnessReport.swift in Sources */,
+				013AF61FC8F1D904917CD908 /* WellnessReportService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -448,9 +457,7 @@
 				CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8LNR79SMU8;
 				INFOPLIST_FILE = Resources/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -467,9 +474,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				DEVELOPMENT_TEAM = 8LNR79SMU8;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -486,9 +492,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				DEVELOPMENT_TEAM = 8LNR79SMU8;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -508,9 +513,7 @@
 				CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8LNR79SMU8;
 				INFOPLIST_FILE = Resources/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

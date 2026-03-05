@@ -7,6 +7,7 @@ enum AppModelContainerFactory {
             UserBaseline.self,
             EnergyReading.self,
             UserPreferences.self,
+            WellnessReport.self,
         ])
     }
 

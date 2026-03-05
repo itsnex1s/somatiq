@@ -50,7 +50,10 @@ final class SomatiqAppDelegate: NSObject, UIApplicationDelegate {
         let workTask = Task { @MainActor in
             do {
                 let container = try AppModelContainerFactory.makeContainer()
-                let dashboardService = DashboardDataService(context: container.mainContext)
+                let dashboardService = DashboardDataService(
+                    context: container.mainContext,
+                    reportNotifier: LocalReportNotificationService()
+                )
 
                 _ = try await dashboardService.recalculateToday(
                     requestAuthorization: false,

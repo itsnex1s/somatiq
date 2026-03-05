@@ -59,7 +59,7 @@ struct TodayView: View {
                             metricCards
                                 .modifier(StaggeredEntrance(index: 0, appeared: sectionsAppeared, reduceMotion: reduceMotion))
 
-                            trendsSection
+                            reportsTimelineSection
                                 .modifier(StaggeredEntrance(index: 1, appeared: sectionsAppeared, reduceMotion: reduceMotion))
 
                             PrivacyBadge()
@@ -245,20 +245,56 @@ struct TodayView: View {
         .padding(.bottom, 4)
     }
 
-    private var trendsSection: some View {
+    private var reportsTimelineSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionTitle("7-Day Trends")
-            if viewModel.weekScores.isEmpty {
+            sectionTitle("Reports Timeline")
+
+            if viewModel.reports.isEmpty {
                 GlassCard {
-                    Text("Not enough data yet to render weekly trends.")
+                    Text("Reports appear automatically when meaningful body changes are detected. Up to 3 reports per day.")
                         .font(.system(size: 14))
                         .foregroundStyle(SomatiqColor.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } else {
-                WeeklyTrendCard(scores: viewModel.weekScores)
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(groupedReportsByDay, id: \.day) { group in
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(dayLabel(for: group.day))
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(SomatiqColor.textTertiary)
+
+                            VStack(spacing: 10) {
+                                ForEach(group.reports, id: \.id) { report in
+                                    WellnessReportCard(report: report)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private var groupedReportsByDay: [(day: Date, reports: [WellnessReport])] {
+        let grouped = Dictionary(grouping: viewModel.reports) { $0.day.startOfDay }
+        return grouped.keys
+            .sorted(by: >)
+            .map { day in
+                let reports = (grouped[day] ?? [])
+                    .sorted(by: { $0.createdAt > $1.createdAt })
+                return (day, reports)
+            }
+    }
+
+    private func dayLabel(for day: Date) -> String {
+        if Calendar.current.isDateInToday(day) {
+            return "Today"
+        }
+        if Calendar.current.isDateInYesterday(day) {
+            return "Yesterday"
+        }
+        return day.formatted(.dateTime.weekday(.wide).day().month(.wide))
     }
 
     private func sectionTitle(_ title: String) -> some View {
@@ -411,6 +447,117 @@ private struct MetricQuickPeekView: View {
                 }
             }
         }
+    }
+}
+
+private struct WellnessReportCard: View {
+    let report: WellnessReport
+
+    private var trigger: WellnessReportTrigger {
+        WellnessReportTrigger(rawValue: report.triggerType) ?? .notableShift
+    }
+
+    private var tint: Color {
+        switch trigger {
+        case .firstCheckin:
+            return SomatiqColor.accent
+        case .stressSpike:
+            return SomatiqColor.stress
+        case .batteryLow:
+            return SomatiqColor.bodyBattery
+        case .sleepDebt:
+            return SomatiqColor.sleep
+        case .hrvDrop:
+            return SomatiqColor.heart
+        case .notableShift:
+            return SomatiqColor.accent
+        }
+    }
+
+    private var triggerTitle: String {
+        switch trigger {
+        case .firstCheckin:
+            return "Check-in"
+        case .stressSpike:
+            return "Stress"
+        case .batteryLow:
+            return "Battery"
+        case .sleepDebt:
+            return "Sleep"
+        case .hrvDrop:
+            return "Heart"
+        case .notableShift:
+            return "Update"
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(report.headline)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(SomatiqColor.textPrimary)
+
+                    Text(report.createdAt.formatted(.dateTime.hour().minute()))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(SomatiqColor.textTertiary)
+                }
+
+                Spacer(minLength: 8)
+
+                Text(triggerTitle)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(tint)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(tint.opacity(0.14), in: Capsule(style: .continuous))
+            }
+
+            Text(report.body)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(SomatiqColor.textSecondary)
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                metricChip(title: "Battery", value: "\(report.bodyBatteryScore)", icon: "battery.100", tint: SomatiqColor.bodyBattery)
+                metricChip(title: "Stress", value: "\(report.stressScore)", icon: "brain.head.profile", tint: SomatiqColor.stress)
+                metricChip(title: "Sleep", value: "\(report.sleepScore)", icon: "moon.stars.fill", tint: SomatiqColor.sleep)
+                metricChip(title: "Heart", value: report.heartScore > 0 ? "\(report.heartScore) ms" : "--", icon: "heart.fill", tint: SomatiqColor.heart)
+            }
+        }
+        .padding(14)
+        .somatiqCardStyle(tint: tint, cornerRadius: 18)
+    }
+
+    private func metricChip(title: String, value: String, icon: String, tint: Color) -> some View {
+        HStack(spacing: 7) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(tint)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(SomatiqColor.textTertiary)
+
+                Text(value)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(tint)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 8)
+        .background(
+            LinearGradient(
+                colors: [Color.white.opacity(0.08), Color.white.opacity(0.03)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+        )
     }
 }
 

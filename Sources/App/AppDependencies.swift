@@ -14,7 +14,8 @@ final class AppDependencies {
         self.healthDataProvider = healthDataProvider
         dashboardService = DashboardDataService(
             context: modelContext,
-            healthDataProvider: healthDataProvider
+            healthDataProvider: healthDataProvider,
+            reportNotifier: LocalReportNotificationService()
         )
         trendsService = TrendsDataService(context: modelContext)
         settingsService = SettingsDataService(
