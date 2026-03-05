@@ -28,6 +28,8 @@ final class StorageService {
             existing.activeCalories = score.activeCalories
             existing.steps = score.steps
             existing.insightText = score.insightText
+            existing.scoreConfidence = score.scoreConfidence
+            existing.qualityReason = score.qualityReason
             existing.updatedAt = Date()
         } else {
             context.insert(score)

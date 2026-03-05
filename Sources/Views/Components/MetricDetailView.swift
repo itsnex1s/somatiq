@@ -396,6 +396,10 @@ struct MetricDetailView: View {
     }
 
     private func hasRealMeasurements(for score: DailyScore) -> Bool {
+        if let confidence = score.scoreConfidence, confidence < 0.55 {
+            return false
+        }
+
         switch kind {
         case .heart:
             return score.avgSDNN > 0 && score.restingHR > 0

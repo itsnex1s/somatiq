@@ -29,6 +29,8 @@ final class DailyScore {
     var activeCalories: Double
     var steps: Int
     var insightText: String
+    var scoreConfidence: Double?
+    var qualityReason: String?
 
     var bodyBatteryScore: Int {
         get { energyScore }
@@ -58,7 +60,9 @@ final class DailyScore {
         restingHR: Double = 0,
         activeCalories: Double = 0,
         steps: Int = 0,
-        insightText: String = ""
+        insightText: String = "",
+        scoreConfidence: Double? = nil,
+        qualityReason: String? = nil
     ) {
         self.date = date.startOfDay
         self.stressScore = stressScore
@@ -80,6 +84,8 @@ final class DailyScore {
         self.activeCalories = activeCalories
         self.steps = steps
         self.insightText = insightText
+        self.scoreConfidence = scoreConfidence
+        self.qualityReason = qualityReason
     }
 
     convenience init(
@@ -100,7 +106,9 @@ final class DailyScore {
         restingHR: Double = 0,
         activeCalories: Double = 0,
         steps: Int = 0,
-        insightText: String = ""
+        insightText: String = "",
+        scoreConfidence: Double? = nil,
+        qualityReason: String? = nil
     ) {
         self.init(
             date: date,
@@ -120,7 +128,9 @@ final class DailyScore {
             restingHR: restingHR,
             activeCalories: activeCalories,
             steps: steps,
-            insightText: insightText
+            insightText: insightText,
+            scoreConfidence: scoreConfidence,
+            qualityReason: qualityReason
         )
     }
 }

@@ -26,6 +26,65 @@ enum Statistics {
         return sqrt(variance)
     }
 
+    static func percentile(_ values: [Double], percentile: Double) -> Double? {
+        guard !values.isEmpty else { return nil }
+        let clampedPercentile = clamped(percentile, min: 0, max: 1)
+        let sorted = values.sorted()
+        guard sorted.count > 1 else { return sorted.first }
+
+        let index = clampedPercentile * Double(sorted.count - 1)
+        let lower = Int(floor(index))
+        let upper = Int(ceil(index))
+        if lower == upper {
+            return sorted[lower]
+        }
+        let weight = index - Double(lower)
+        return sorted[lower] + (sorted[upper] - sorted[lower]) * weight
+    }
+
+    static func iqr(_ values: [Double]) -> Double? {
+        guard let p25 = percentile(values, percentile: 0.25),
+              let p75 = percentile(values, percentile: 0.75) else {
+            return nil
+        }
+        return p75 - p25
+    }
+
+    static func winsorized(
+        _ values: [Double],
+        lowerPercentile: Double = 0.1,
+        upperPercentile: Double = 0.9
+    ) -> [Double] {
+        guard !values.isEmpty else { return values }
+        guard let lower = percentile(values, percentile: lowerPercentile),
+              let upper = percentile(values, percentile: upperPercentile) else {
+            return values
+        }
+        return values.map { clamped($0, min: lower, max: upper) }
+    }
+
+    static func robustZ(
+        _ value: Double,
+        median: Double,
+        iqr: Double,
+        iqrFloor: Double = 1
+    ) -> Double {
+        let safeScale = max(abs(iqr), iqrFloor)
+        return clamped((value - median) / safeScale, min: -4, max: 4)
+    }
+
+    static func sigmoid(_ value: Double, k: Double = 0.9) -> Double {
+        1 / (1 + exp(-k * value))
+    }
+
+    static func circularMinutesDistance(_ lhs: Double, _ rhs: Double) -> Double {
+        let minutesInDay = 1_440.0
+        let a = lhs.truncatingRemainder(dividingBy: minutesInDay)
+        let b = rhs.truncatingRemainder(dividingBy: minutesInDay)
+        let diff = abs(a - b)
+        return min(diff, minutesInDay - diff)
+    }
+
     static func clamped(_ value: Double, min minValue: Double, max maxValue: Double) -> Double {
         min(max(value, minValue), maxValue)
     }

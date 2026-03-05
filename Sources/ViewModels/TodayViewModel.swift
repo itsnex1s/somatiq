@@ -117,10 +117,11 @@ final class TodayViewModel {
     }
 
     private func calculateTrends() {
-        guard weekScores.count >= 4 else { return }
+        let reliableScores = weekScores.filter { ($0.scoreConfidence ?? 1) >= 0.55 }
+        guard reliableScores.count >= 4 else { return }
 
-        let recent = Array(weekScores.suffix(3))
-        let earlier = Array(weekScores.dropLast(3))
+        let recent = Array(reliableScores.suffix(3))
+        let earlier = Array(reliableScores.dropLast(3))
 
         restingHRTrend = makeTrend(
             recent: recent.map(\.restingHR),

@@ -7,8 +7,15 @@ struct InsightGenerator {
         battery: BatteryResult,
         sleepHours: Double,
         hrv: Double,
-        baselineHRV: Double
+        baselineHRV: Double,
+        scoreConfidence: Double,
+        qualityReason: String?
     ) -> String {
+        if scoreConfidence < 0.7 {
+            let reasonText = qualityReason ?? "limited reliable inputs today"
+            return "Data confidence is limited (\(reasonText)). Keep trends in view and retake a calm morning measurement tomorrow."
+        }
+
         if sleep.score < 45 {
             return "Sleep was limited (\(formatted(sleepHours))h), so recovery is weaker today. Prioritize an earlier bedtime."
         }

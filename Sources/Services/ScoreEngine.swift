@@ -41,26 +41,39 @@ struct ScoreEngine {
         currentSDNN: Double,
         currentRHR: Double,
         baselineSDNN: Double,
-        baselineRHR: Double
+        baselineRHR: Double,
+        baselineSDNNIQR: Double = 8,
+        baselineRHRIQR: Double = 5,
+        currentLoad: Double = 0,
+        baselineLoad: Double = 0
     ) -> StressResult {
         let safeSDNN = max(currentSDNN, 1)
         let safeBaselineSDNN = max(baselineSDNN, 1)
-        let safeRHR = max(currentRHR, 1)
-        let safeBaselineRHR = max(baselineRHR, 1)
+        let lnCurrent = log(safeSDNN)
+        let lnBaseline = log(safeBaselineSDNN)
 
-        let lnSDNN = log(safeSDNN)
-        let lnBaselineSDNN = log(safeBaselineSDNN)
-        let ratio = Statistics.clamped(lnSDNN / max(lnBaselineSDNN, 0.001), min: 0.5, max: 1.5)
-        let hrvStress = (1.5 - ratio) * 100
-
-        let deviation = Statistics.clamped(
-            (safeRHR - safeBaselineRHR) / safeBaselineRHR,
-            min: -0.3,
-            max: 0.3
+        let sdnnIqrInLogSpace = max(baselineSDNNIQR / safeBaselineSDNN, 0.04)
+        let zHRV = Statistics.robustZ(
+            lnCurrent,
+            median: lnBaseline,
+            iqr: sdnnIqrInLogSpace,
+            iqrFloor: 0.04
         )
-        let hrStress = ((deviation + 0.3) / 0.6) * 100
+        let zRHR = Statistics.robustZ(
+            max(currentRHR, 1),
+            median: max(baselineRHR, 1),
+            iqr: baselineRHRIQR,
+            iqrFloor: 2
+        )
+        let zLoad = Statistics.robustZ(
+            currentLoad,
+            median: baselineLoad,
+            iqr: max(baselineLoad * 0.25, 2),
+            iqrFloor: 2
+        )
 
-        let total = Statistics.clampedInt((hrvStress * 0.7) + (hrStress * 0.3), min: 0, max: 100)
+        let stressRaw = (0.55 * (-zHRV)) + (0.30 * zRHR) + (0.15 * zLoad)
+        let total = Statistics.clampedInt(Statistics.sigmoid(stressRaw, k: 0.9) * 100, min: 0, max: 100)
         let level = stressLevel(for: total)
         return StressResult(score: total, level: level)
     }
@@ -68,26 +81,68 @@ struct ScoreEngine {
     func calculateSleep(
         sleepData: SleepData,
         bedtimeHistory: [Date],
-        targetHours: Double
+        targetHours: Double,
+        currentSDNN: Double? = nil,
+        currentRHR: Double? = nil,
+        baselineSDNN: Double? = nil,
+        baselineRHR: Double? = nil,
+        baselineSleepMidpointMinutes: Double? = nil
     ) -> SleepResult {
         let durationHours = sleepData.totalSleepMinutes / 60
-        let duration = durationScore(hours: durationHours, targetHours: targetHours)
-        let efficiency = efficiencyScore(value: sleepData.efficiency)
-        let deep = stageScore(
-            ratio: percentage(part: sleepData.deepMinutes, total: sleepData.totalSleepMinutes),
-            ideal: 0.20,
-            lowBound: 0.10,
-            maxPoints: 20
-        )
-        let rem = stageScore(
-            ratio: percentage(part: sleepData.remMinutes, total: sleepData.totalSleepMinutes),
-            ideal: 0.25,
-            lowBound: 0.10,
-            maxPoints: 15
-        )
-        let consistency = consistencyScore(bedtimes: bedtimeHistory)
+        let target = max(targetHours, 6)
+        let durationDeltaRatio = abs(durationHours - target) / target
+        let durationComponent = Statistics.clamped(100 - (durationDeltaRatio * 120), min: 0, max: 100)
 
-        let total = Statistics.clampedInt(duration + efficiency + deep + rem + consistency, min: 0, max: 100)
+        let efficiencyComponent = Statistics.clamped(
+            ((sleepData.efficiency - 0.75) / (0.95 - 0.75)) * 100,
+            min: 0,
+            max: 100
+        )
+
+        let timingConsistency: Double
+        if let baselineSleepMidpointMinutes,
+           let todayMidpoint = sleepMidpointMinutes(from: sleepData),
+           !bedtimeHistory.isEmpty {
+            let distance = Statistics.circularMinutesDistance(todayMidpoint, baselineSleepMidpointMinutes)
+            timingConsistency = Statistics.clamped(100 - (distance / 180 * 100), min: 0, max: 100)
+        } else {
+            timingConsistency = consistencyScore(bedtimes: bedtimeHistory) * (100 / 15)
+        }
+
+        let recoveryComponent: Double
+        if let currentSDNN, let currentRHR, let baselineSDNN, let baselineRHR {
+            let zHRV = Statistics.robustZ(
+                log(max(currentSDNN, 1)),
+                median: log(max(baselineSDNN, 1)),
+                iqr: max(0.05, (max(baselineSDNN, 1) * 0.20) / max(baselineSDNN, 1)),
+                iqrFloor: 0.05
+            )
+            let zRHR = Statistics.robustZ(
+                max(currentRHR, 1),
+                median: max(baselineRHR, 1),
+                iqr: max(baselineRHR * 0.1, 2),
+                iqrFloor: 2
+            )
+            recoveryComponent = Statistics.clamped(50 + (25 * zHRV) - (15 * zRHR), min: 0, max: 100)
+        } else {
+            let deepRatio = percentage(part: sleepData.deepMinutes, total: sleepData.totalSleepMinutes)
+            let remRatio = percentage(part: sleepData.remMinutes, total: sleepData.totalSleepMinutes)
+            recoveryComponent = Statistics.clamped(
+                (stageScore(ratio: deepRatio, ideal: 0.2, lowBound: 0.1, maxPoints: 50) +
+                    stageScore(ratio: remRatio, ideal: 0.25, lowBound: 0.1, maxPoints: 50)),
+                min: 0,
+                max: 100
+            )
+        }
+
+        let total = Statistics.clampedInt(
+            (0.35 * durationComponent) +
+                (0.20 * efficiencyComponent) +
+                (0.20 * timingConsistency) +
+                (0.25 * recoveryComponent),
+            min: 0,
+            max: 100
+        )
         let level = sleepLevel(for: total)
         return SleepResult(score: total, level: level)
     }
@@ -103,74 +158,99 @@ struct ScoreEngine {
         wakeHours: Double,
         previousBattery: Double?,
         sleepDebtHours: Double = 0,
-        overnightRecoveryBonus: Bool = false
+        overnightRecoveryBonus: Bool = false,
+        stressScore: Int? = nil
     ) -> BatteryResult {
-        // HRV quality factor: how well-recovered you are
-        let quality = Statistics.clamped(
-            currentSDNN / max(baselineSDNN, 1),
-            min: 0.5,
-            max: 1.5
+        let sleepScoreApprox = calculateSleep(
+            sleepData: sleepData,
+            bedtimeHistory: [],
+            targetHours: 8,
+            currentSDNN: currentSDNN,
+            currentRHR: currentRHR,
+            baselineSDNN: baselineSDNN,
+            baselineRHR: baselineRHR
+        ).score
+
+        let zHRV = Statistics.robustZ(
+            log(max(currentSDNN, 1)),
+            median: log(max(baselineSDNN, 1)),
+            iqr: max((baselineSDNN * 0.20) / max(baselineSDNN, 1), 0.05),
+            iqrFloor: 0.05
+        )
+        let zRHR = Statistics.robustZ(
+            currentRHR,
+            median: baselineRHR,
+            iqr: max(baselineRHR * 0.1, 2),
+            iqrFloor: 2
         )
 
-        // HR factor: lower HR during sleep = better recovery
-        let hrFactor = Statistics.clamped(
-            max(baselineRHR, 1) / max(currentRHR, 1),
-            min: 0.7,
-            max: 1.3
-        )
-
-        // CHARGE: sleep stages × quality × hrFactor
-        let deepHours = sleepData.deepMinutes / 60
-        let remHours = sleepData.remMinutes / 60
-        let coreHours = sleepData.coreMinutes / 60
-        let awakeHours = sleepData.awakeMinutes / 60
-
-        // Enhanced weights: Deep ×12, REM ×8 (research-backed)
-        let sleepCharge =
-            (deepHours * 12 * quality * hrFactor) +
-            (remHours * 8 * quality * hrFactor) +
-            (coreHours * 4 * quality * hrFactor)
-
-        // Sleep debt penalty: rolling 3-day avg vs target, reduce charge up to 20%
-        let debtPenalty = sleepDebtHours > 1
-            ? Statistics.clamped(sleepDebtHours / 3.0 * 0.20, min: 0, max: 0.20)
-            : 0
-        let adjustedSleepCharge = sleepCharge * (1 - debtPenalty)
-
-        // Restful wake: 2 pts/hr if HRV above baseline (relaxed wakefulness)
-        let restfulWakeCharge = currentSDNN > baselineSDNN ? awakeHours * 2 : 0
-
-        // Overnight recovery bonus: +5 if SDNN >110% baseline AND RHR <95% baseline
-        let recoveryBonus: Double = overnightRecoveryBonus ? 5 : 0
-
-        // DRAIN: activity + stress + baseline metabolic
-        let calorieDrain = activeCalories / 500 * 5
-
-        // Smarter stress drain: use HRV deviation directly
-        let safeBaselineSDNN = max(baselineSDNN, 1)
-        let hrvDeviation = Statistics.clamped(
-            (safeBaselineSDNN - currentSDNN) / safeBaselineSDNN,
+        let morningAnchor = Statistics.clamped(
+            35 + (0.35 * Double(sleepScoreApprox)) + (20 * Statistics.sigmoid(0.9 * (zHRV - 0.6 * zRHR))),
             min: 0,
-            max: 0.5
+            max: 100
         )
-        let stressDrainRate = 1 + (hrvDeviation / 0.5) * 4  // 1-5 pts/hr
-        let stressDrain = stressDrainRate * max(wakeHours, 0)
 
-        // Prolonged wake drain: after 14+ hours awake, +1 pt/hr extra per hour beyond 14
-        let prolongedWakeDrain = wakeHours > 14
-            ? (wakeHours - 14) * 1
-            : 0
+        let activityLoad = estimateLoad(activeCalories: activeCalories, steps: steps)
+        let drainActivity = Statistics.clamped(activityLoad * 1.5, min: 0, max: 25)
+        let stressSource = stressScore.map(Double.init) ?? Double(calculateStress(
+            currentSDNN: currentSDNN,
+            currentRHR: currentRHR,
+            baselineSDNN: baselineSDNN,
+            baselineRHR: baselineRHR
+        ).score)
+        let drainStress = Statistics.clamped((stressSource / 100) * max(wakeHours, 0) * 0.8, min: 0, max: 12)
+        let drainWake = Statistics.clamped(1.5 + max(wakeHours - 14, 0), min: 0, max: 12)
 
-        let totalCharge = adjustedSleepCharge + restfulWakeCharge + recoveryBonus
-        let totalDrain = calorieDrain + stressDrain + prolongedWakeDrain
+        let debtPenalty = Statistics.clamped(sleepDebtHours * 1.2, min: 0, max: 12)
+        let recoveryBonus: Double = overnightRecoveryBonus ? 4 : 0
+        let restCharge: Double = currentSDNN > baselineSDNN ? 2 : 0
 
-        let startLevel = previousBattery ?? 50
-        let updated = Statistics.clamped(startLevel + totalCharge - totalDrain, min: 0, max: 100)
+        let startLevel = previousBattery ?? morningAnchor
+        let totalCharge = startLevel + restCharge + recoveryBonus
+        let totalDrain = drainActivity + drainStress + drainWake + debtPenalty
+        let rawUpdated = totalCharge - totalDrain
+        let updated = Statistics.clamped(
+            rawUpdated,
+            min: 0,
+            max: 100
+        )
 
         let score = Statistics.clampedInt(updated, min: 0, max: 100)
         let level = batteryLevel(for: score)
         let delta = updated - startLevel
         return BatteryResult(score: score, level: level, delta: delta)
+    }
+
+    func calculateHeartScore(
+        currentSDNN: Double,
+        baselineSDNN: Double,
+        baselineSDNNIQR: Double,
+        recentSDNNValues: [Double]
+    ) -> Int {
+        let zHrv = Statistics.robustZ(
+            log(max(currentSDNN, 1)),
+            median: log(max(baselineSDNN, 1)),
+            iqr: max((baselineSDNNIQR / max(baselineSDNN, 1)), 0.05),
+            iqrFloor: 0.05
+        )
+        let lnRecent = recentSDNNValues.map { log(max($0, 1)) }
+        let trend = Statistics.robustZ(
+            Statistics.median(lnRecent) ?? log(max(currentSDNN, 1)),
+            median: log(max(baselineSDNN, 1)),
+            iqr: max((baselineSDNNIQR / max(baselineSDNN, 1)), 0.05),
+            iqrFloor: 0.05
+        )
+        let volatility = Statistics.standardDeviation(lnRecent) ?? 0
+        let volatilityPenalty = Statistics.clamped((volatility - 0.10) / 0.10, min: 0, max: 1)
+        let heartRaw = (0.65 * zHrv) + (0.20 * trend) - (0.30 * volatilityPenalty)
+        return Statistics.clampedInt(50 + (20 * heartRaw), min: 0, max: 100)
+    }
+
+    func estimateLoad(activeCalories: Double, steps: Int) -> Double {
+        if activeCalories > 0 {
+            return activeCalories / 10
+        }
+        return Double(steps) / 1_000
     }
 
     private func percentage(part: Double, total: Double) -> Double {
@@ -239,6 +319,15 @@ struct ScoreEngine {
             return ((120 - stdDev) / 60 * 10)
         }
         return 0
+    }
+
+    private func sleepMidpointMinutes(from sleepData: SleepData) -> Double? {
+        guard let inBedStart = sleepData.inBedStart, let inBedEnd = sleepData.inBedEnd else {
+            return nil
+        }
+        let midpoint = inBedStart.addingTimeInterval(inBedEnd.timeIntervalSince(inBedStart) / 2)
+        let components = Calendar.current.dateComponents([.hour, .minute], from: midpoint)
+        return Double((components.hour ?? 0) * 60 + (components.minute ?? 0))
     }
 
     private func stressLevel(for score: Int) -> StressLevel {

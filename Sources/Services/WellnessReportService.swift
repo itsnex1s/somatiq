@@ -58,6 +58,10 @@ final class WellnessReportService {
         previous: WellnessReport?,
         now: Date
     ) -> WellnessReportTrigger? {
+        if let confidence = current.scoreConfidence, confidence < 0.80 {
+            return nil
+        }
+
         guard let previous else {
             return .firstCheckin
         }

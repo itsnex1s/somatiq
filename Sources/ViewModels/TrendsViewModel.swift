@@ -43,7 +43,10 @@ final class TrendsViewModel {
             errorMessage = nil
             let rawHistory = try trendsService.fetchHistory(for: selectedPeriod)
             history = rawHistory.filter { score in
-                (score.avgSDNN > 0 && score.restingHR > 0) ||
+                if let confidence = score.scoreConfidence, confidence < 0.55 {
+                    return false
+                }
+                return (score.avgSDNN > 0 && score.restingHR > 0) ||
                     score.sleepDurationMin > 0 ||
                     score.activeCalories > 0 ||
                     score.steps > 0

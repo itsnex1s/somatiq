@@ -4,14 +4,14 @@ import UIKit
 enum RootTab: Hashable {
     case today
     case trends
-    case labs
+    case ai
     case settings
 
     var title: String {
         switch self {
         case .today: "Today"
         case .trends: "Trends"
-        case .labs: "Labs"
+        case .ai: "AI"
         case .settings: "Settings"
         }
     }
@@ -20,12 +20,12 @@ enum RootTab: Hashable {
         switch self {
         case .today: "square.grid.2x2.fill"
         case .trends: "waveform.path.ecg"
-        case .labs: "doc.text.fill"
+        case .ai: "sparkles"
         case .settings: "gearshape.fill"
         }
     }
 
-    static let allTabs: [RootTab] = [.today, .trends, .labs, .settings]
+    static let allTabs: [RootTab] = [.today, .trends, .ai, .settings]
 }
 
 struct RootTabView: View {
@@ -47,8 +47,13 @@ struct RootTabView: View {
                     TodayView(dashboardService: dependencies.dashboardService, trendsService: dependencies.trendsService)
                 case .trends:
                     TrendsView(trendsService: dependencies.trendsService)
-                case .labs:
-                    LabsPlaceholderView()
+                case .ai:
+                    AIChatView(
+                        dashboardService: dependencies.dashboardService,
+                        conversationStore: dependencies.aiConversationStore,
+                        modelManager: dependencies.aiModelManager,
+                        chatService: dependencies.aiChatService
+                    )
                 case .settings:
                     SettingsView(settingsService: dependencies.settingsService)
                 }
