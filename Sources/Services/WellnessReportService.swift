@@ -46,7 +46,7 @@ final class WellnessReportService {
             stressScore: score.stressScore,
             sleepScore: score.sleepScore,
             bodyBatteryScore: score.bodyBatteryScore,
-            heartScore: Int(score.avgSDNN.rounded()),
+            heartScore: score.heartScore,
             source: source
         )
         try storage.insertWellnessReport(report)
@@ -70,7 +70,7 @@ final class WellnessReportService {
             return nil
         }
 
-        let currentHeart = Int(current.avgSDNN.rounded())
+        let currentHeart = current.heartScore
 
         if current.stressScore >= 72, previous.stressScore < 72 {
             return .stressSpike
@@ -140,7 +140,7 @@ final class WellnessReportService {
     private func dominantShiftMetric(score: DailyScore, previous: WellnessReport?) -> String {
         guard let previous else { return "Body state" }
 
-        let heartScore = Int(score.avgSDNN.rounded())
+        let heartScore = score.heartScore
         let deltas: [(name: String, value: Int)] = [
             ("Stress", abs(score.stressScore - previous.stressScore)),
             ("Sleep", abs(score.sleepScore - previous.sleepScore)),

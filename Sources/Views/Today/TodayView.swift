@@ -115,6 +115,12 @@ struct TodayView: View {
                 sectionsAppeared = true
             }
         }
+        .onAppear {
+            viewModel.startLiveUpdates()
+        }
+        .onDisappear {
+            viewModel.stopLiveUpdates()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .healthReconnectDidComplete)) { _ in
             Task {
                 await viewModel.refresh(forceRecalculate: true)

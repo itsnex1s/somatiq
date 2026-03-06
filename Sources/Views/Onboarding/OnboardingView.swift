@@ -3,12 +3,9 @@ import SwiftUI
 struct OnboardingView: View {
     let onComplete: () -> Void
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var step: Int = 0
     @State private var isLoading = false
     @State private var errorMessage: String?
-    @State private var heroGlow = false
-    @State private var featuresAppeared = false
     private let healthDataProvider: any HealthDataProviding
 
     init(
@@ -23,56 +20,23 @@ struct OnboardingView: View {
         ZStack {
             SomatiqColor.bg.ignoresSafeArea()
 
-            VStack(spacing: 28) {
-                Spacer()
+            VStack(spacing: 18) {
+                onboardingHeader
+                    .padding(.top, 8)
 
-                if step == 0 {
-                    welcomeContent
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                } else {
-                    permissionContent
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
+                Spacer(minLength: 4)
+
+                Group {
+                    if step == 0 {
+                        welcomeContent
+                    } else {
+                        permissionContent
+                    }
                 }
 
-                Spacer()
+                Spacer(minLength: 8)
 
-                Button {
-                    primaryAction()
-                } label: {
-                    Text(primaryButtonTitle)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                colors: [SomatiqColor.accent, SomatiqColor.sleep],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .clipShape(Capsule())
-                        .overlay {
-                            Capsule()
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [Color.white.opacity(0.24), SomatiqColor.accent.opacity(0.35), Color.white.opacity(0.08)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 0.95
-                                )
-                        }
-                }
-                .disabled(isLoading)
-                .somatiqShadow(tint: SomatiqColor.accent, intensity: .prominent)
-                .buttonStyle(.somatiqPressable)
+                primaryButton
 
                 if step == 1 {
                     Button("Not now") {
@@ -87,22 +51,151 @@ struct OnboardingView: View {
         .errorAlert(title: "Permission", message: $errorMessage)
     }
 
+    private var onboardingHeader: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Somatiq")
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundStyle(SomatiqColor.textPrimary)
+                Text("Private body intelligence")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(SomatiqColor.textTertiary)
+            }
+
+            Spacer()
+
+            HStack(spacing: 6) {
+                ForEach(0..<2, id: \.self) { index in
+                    Capsule(style: .continuous)
+                        .fill(index == step ? SomatiqColor.accent.opacity(0.95) : Color.white.opacity(0.14))
+                        .frame(width: index == step ? 20 : 8, height: 8)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                LinearGradient(
+                    colors: [Color(hex: "#1B1D2A"), Color(hex: "#10111A")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                in: Capsule(style: .continuous)
+            )
+            .overlay {
+                Capsule(style: .continuous)
+                    .stroke(Color.white.opacity(0.1), lineWidth: 0.7)
+            }
+        }
+    }
+
     private var welcomeContent: some View {
+        VStack(spacing: 14) {
+            heroSymbol(
+                icon: "waveform.path.ecg",
+                title: "Know your body.\nOwn your data.",
+                subtitle: "Somatiq computes core scores fully on-device. No account. No cloud."
+            )
+
+            GlassCard(tint: SomatiqColor.accent) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("What you’ll see on Today")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(SomatiqColor.textPrimary)
+
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                        previewTile(icon: "battery.100", label: "Battery", tint: SomatiqColor.bodyBattery)
+                        previewTile(icon: "brain.head.profile", label: "Stress", tint: SomatiqColor.stress)
+                        previewTile(icon: "moon.stars.fill", label: "Sleep", tint: SomatiqColor.sleep)
+                        previewTile(icon: "heart.fill", label: "Heart", tint: SomatiqColor.heart)
+                    }
+                }
+            }
+        }
+    }
+
+    private var permissionContent: some View {
+        VStack(spacing: 14) {
+            heroSymbol(
+                icon: "applewatch.side.right",
+                title: "Connect Apple Health",
+                subtitle: "Somatiq reads only the metrics needed for recovery insights."
+            )
+
+            VStack(alignment: .leading, spacing: 12) {
+                featureRow(icon: "waveform.path.ecg", text: "HRV and resting heart rate", tint: SomatiqColor.heart)
+                featureRow(icon: "moon.stars.fill", text: "Sleep stages and duration", tint: SomatiqColor.sleep)
+                featureRow(icon: "flame.fill", text: "Active energy and steps", tint: SomatiqColor.bodyBattery)
+            }
+            .padding(SomatiqSpacing.cardPadding)
+            .somatiqCardStyle(tint: SomatiqColor.energy)
+        }
+    }
+
+    private func previewTile(icon: String, label: String, tint: Color) -> some View {
+        HStack(spacing: 7) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 22, height: 22)
+                .background(tint.opacity(0.16), in: Circle())
+
+            Text(label)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(SomatiqColor.textSecondary)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 9)
+        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func featureRow(icon: String, text: String, tint: Color) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 24, height: 24)
+                .background(tint.opacity(0.16), in: Circle())
+
+            Text(text)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(SomatiqColor.textSecondary)
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func heroSymbol(icon: String, title: String, subtitle: String) -> some View {
         VStack(spacing: 14) {
             ZStack {
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [SomatiqColor.accent.opacity(heroGlow ? 0.25 : 0.1), .clear],
+                            colors: [SomatiqColor.accent.opacity(0.18), .clear],
                             center: .center,
                             startRadius: 20,
-                            endRadius: 80
+                            endRadius: 84
                         )
                     )
-                    .frame(width: 160, height: 160)
+                    .frame(width: 156, height: 156)
 
-                Image(systemName: "heart.text.square.fill")
-                    .font(.system(size: 64))
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: "#171929"), Color(hex: "#0C0D15")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 86, height: 86)
+                    .overlay {
+                        Circle()
+                            .stroke(Color.white.opacity(0.15), lineWidth: 0.8)
+                    }
+
+                Image(systemName: icon)
+                    .font(.system(size: 34, weight: .semibold))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [SomatiqColor.accent, SomatiqColor.sleep],
@@ -111,79 +204,54 @@ struct OnboardingView: View {
                         )
                     )
             }
-            .onAppear {
-                guard !reduceMotion else { return }
-                withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) {
-                    heroGlow = true
+
+            VStack(spacing: 8) {
+                Text(title)
+                    .font(.system(size: 29, weight: .bold))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(SomatiqColor.textPrimary)
+
+                Text(subtitle)
+                    .font(.system(size: 15))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(SomatiqColor.textSecondary)
+                    .padding(.horizontal, 10)
+            }
+        }
+    }
+
+    private var primaryButton: some View {
+        Button {
+            primaryAction()
+        } label: {
+            Text(primaryButtonTitle)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    LinearGradient(
+                        colors: [SomatiqColor.accent, SomatiqColor.sleep],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(Capsule())
+                .overlay {
+                    Capsule()
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.24), SomatiqColor.accent.opacity(0.35), Color.white.opacity(0.08)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.95
+                        )
                 }
-            }
-
-            Text("Know your body.\nOwn your data.")
-                .font(.system(size: 30, weight: .bold))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(SomatiqColor.textPrimary)
-
-            Text("Somatiq computes Stress, Sleep, and Energy scores fully on-device. No account. No cloud.")
-                .font(.system(size: 16))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(SomatiqColor.textSecondary)
-                .padding(.horizontal, 12)
         }
-    }
-
-    private var permissionContent: some View {
-        VStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [SomatiqColor.energy.opacity(0.15), .clear],
-                            center: .center,
-                            startRadius: 20,
-                            endRadius: 80
-                        )
-                    )
-                    .frame(width: 160, height: 160)
-
-                Image(systemName: "applewatch.side.right")
-                    .font(.system(size: 64))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [SomatiqColor.energy, SomatiqColor.energySecondary],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            }
-
-            Text("Connect Apple Health")
-                .font(.system(size: 28, weight: .bold))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(SomatiqColor.textPrimary)
-
-            VStack(alignment: .leading, spacing: 12) {
-                featureRow(icon: "waveform.path.ecg", text: "HRV and resting heart rate", index: 0)
-                featureRow(icon: "moon.stars.fill", text: "Sleep stages and duration", index: 1)
-                featureRow(icon: "flame.fill", text: "Active energy and steps", index: 2)
-            }
-            .padding(SomatiqSpacing.cardPadding)
-            .somatiqCardStyle()
-            .onAppear {
-                withAnimation { featuresAppeared = true }
-            }
-        }
-    }
-
-    private func featureRow(icon: String, text: String, index: Int) -> some View {
-        Label(text, systemImage: icon)
-            .font(.system(size: 15, weight: .medium))
-            .foregroundStyle(SomatiqColor.textSecondary)
-            .opacity(featuresAppeared ? 1 : 0)
-            .offset(x: featuresAppeared ? 0 : -10)
-            .animation(
-                reduceMotion ? .linear(duration: 0.1) : SomatiqAnimation.staggered(index: index),
-                value: featuresAppeared
-            )
+        .disabled(isLoading)
+        .somatiqShadow(tint: SomatiqColor.accent, intensity: .prominent)
+        .buttonStyle(.somatiqPressable)
     }
 
     private var primaryButtonTitle: String {
@@ -195,9 +263,7 @@ struct OnboardingView: View {
 
     private func primaryAction() {
         if step == 0 {
-            withAnimation(SomatiqAnimation.cardEntrance) {
-                step = 1
-            }
+            step = 1
             return
         }
 

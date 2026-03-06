@@ -26,6 +26,7 @@ final class DailyScore {
     var avgSDNN: Double
     var restingHR: Double
 
+    var heartScore: Int
     var activeCalories: Double
     var steps: Int
     var insightText: String
@@ -48,6 +49,7 @@ final class DailyScore {
         bedtimeAt: Date? = nil,
         avgSDNN: Double = 0,
         restingHR: Double = 0,
+        heartScore: Int = 0,
         activeCalories: Double = 0,
         steps: Int = 0,
         insightText: String = "",
@@ -71,6 +73,7 @@ final class DailyScore {
         self.bedtimeAt = bedtimeAt
         self.avgSDNN = avgSDNN
         self.restingHR = restingHR
+        self.heartScore = heartScore
         self.activeCalories = activeCalories
         self.steps = steps
         self.insightText = insightText

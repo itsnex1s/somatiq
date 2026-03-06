@@ -36,6 +36,7 @@ final class TodayViewModel {
 
     private let dashboardService: DashboardDataService
     let trendsService: TrendsDataService
+    private var liveRefreshTask: Task<Void, Never>?
 
     init(dashboardService: DashboardDataService, trendsService: TrendsDataService) {
         self.dashboardService = dashboardService
@@ -46,6 +47,27 @@ final class TodayViewModel {
         if lastUpdated == nil {
             await refresh(forceRecalculate: false)
         }
+    }
+
+    func startLiveUpdates() {
+        guard liveRefreshTask == nil else { return }
+
+        liveRefreshTask = Task { [weak self] in
+            guard let self else { return }
+
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(300))
+                if Task.isCancelled {
+                    break
+                }
+                await self.refresh(forceRecalculate: false)
+            }
+        }
+    }
+
+    func stopLiveUpdates() {
+        liveRefreshTask?.cancel()
+        liveRefreshTask = nil
     }
 
     func requestHealthAuthorization() async {
@@ -145,10 +167,10 @@ final class TodayViewModel {
         )
 
         batteryTrend = makeTrend(
-            recent: recent.map(\.activeCalories),
-            earlier: earlier.map(\.activeCalories),
+            recent: recent.map { Double($0.bodyBatteryScore) },
+            earlier: earlier.map { Double($0.bodyBatteryScore) },
             invertBetter: false,
-            format: { String(format: "%.0f kcal avg", $0) }
+            format: { String(format: "%.0f avg", $0) }
         )
     }
 

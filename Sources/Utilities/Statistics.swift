@@ -85,6 +85,23 @@ enum Statistics {
         return min(diff, minutesInDay - diff)
     }
 
+    static func circularMedian(_ values: [Double], period: Double = 1440) -> Double? {
+        guard !values.isEmpty else { return nil }
+        guard values.count > 1 else { return values.first }
+        let ref = values[0]
+        let shifted = values.map { v -> Double in
+            var d = v - ref
+            if d > period / 2 { d -= period }
+            if d < -period / 2 { d += period }
+            return d
+        }
+        guard let med = median(shifted) else { return nil }
+        var result = ref + med
+        if result < 0 { result += period }
+        if result >= period { result -= period }
+        return result
+    }
+
     static func clamped(_ value: Double, min minValue: Double, max maxValue: Double) -> Double {
         min(max(value, minValue), maxValue)
     }

@@ -11,16 +11,18 @@
 		083BD2795B2C114A17340934 /* LabsPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4C44EA531E1688CA8F56D1 /* LabsPlaceholderView.swift */; };
 		0C19CB63002441C5F4283765 /* JournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A8925104C077CE53BCA1114 /* JournalView.swift */; };
 		0CB517801E9704AD8490CA10 /* PrivacyBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B08E7CACC2AB7A975F8DC69 /* PrivacyBadge.swift */; };
+		13B00CC6F059E0A8B4D7B39E /* LabAnalysisRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3334507CD2B183196412BCC1 /* LabAnalysisRecord.swift */; };
 		1452FF00488402DADDA49C04 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 852292E34CE51C51ECC1BE13 /* EmptyStateView.swift */; };
 		179CB386783C9AAABB1330C4 /* AIConversationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13B7500C46C1FD3A66F200C /* AIConversationStore.swift */; };
 		183CA25B48B5A4EF5A7A772E /* ServiceLayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10A70CD64450DAA4E1770EA8 /* ServiceLayerTests.swift */; };
 		1B9D887E951FDAEFE334B455 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A63E56B75939B115DE2E3948 /* AppLog.swift */; };
 		1BB65FE091D091FA5D0F0D6C /* AIModelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D1504676CBD035D6332E43 /* AIModelManager.swift */; };
 		1C0CCB8391AB7C82FBC908C6 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC3879C7804BA9AF58135E0 /* PreviewData.swift */; };
-		1E3F9E8EDC5ECB8B68C01AAE /* BaselineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33DCCA44345994E7F7D9BE17 /* BaselineService.swift */; };
+		1EA2FE45E694EDC99C2879FC /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 7F2F48D5F59A7C51B16EEF29 /* MLXLLM */; };
 		209782366128F65F947E5CD7 /* TrendsDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3640747F7FA4B961E70E97DC /* TrendsDataService.swift */; };
 		28C3E521F9981C07535D9245 /* DailyScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77F56C1915EAA6A175D5AC7B /* DailyScore.swift */; };
 		2B9BBC572018BE29E36B0780 /* SomatiqApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3FE5090EA5FDA851D08B027 /* SomatiqApp.swift */; };
+		2CA8A4A8D49EA4F1C5D7DCC4 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AB436832CFF8C5F71232EF40 /* MLXLMCommon */; };
 		2CAF15E6F19C7F8FE531E0F9 /* AnalysesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C21C3BCF39CAA3A3CAFF99F /* AnalysesView.swift */; };
 		31D0864830D3110DC1BC1A7B /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F19B3E71215CB170063A4CC /* GlassCard.swift */; };
 		32550F3F6450C700CFAEF998 /* AppModelContainerFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F32ECD06E0344E8AE6E5674D /* AppModelContainerFactory.swift */; };
@@ -56,6 +58,7 @@
 		AE8EE56CA5E7F00E086EBBDC /* SettingsDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 981677700FFBE263746153A2 /* SettingsDataService.swift */; };
 		AEFF823614AA77F36A66587A /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ABD6DF7E857AFF47FF9EE2F /* RootTabView.swift */; };
 		B17EB7F536F5A95590CA0743 /* MetricDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D22F3FB18ECE19540969EEF /* MetricDetailView.swift */; };
+		B1CC6ED710332EEF86ECB09E /* LabAnalysisDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A4E2C43F52C75009A744A0 /* LabAnalysisDetailView.swift */; };
 		B655A297F06B778D5062D0DA /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57C779AF4F00F303FF754FA /* TodayView.swift */; };
 		C3367645D6514A60A2891763 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A41428C862FA3BD5D630DF8 /* Theme.swift */; };
 		CD57440DD54D3194327F3FEF /* HealthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DBF4EF53108AB38362610DC /* HealthModels.swift */; };
@@ -63,6 +66,7 @@
 		DD3EAA02ED0EB9F11EAD7EDA /* ErrorAlertModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73CD527256BE6C42992C181 /* ErrorAlertModifier.swift */; };
 		E2C3177B4CF6DEFD891A2FC6 /* DashboardSnapshotProviding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D097874DDCF3A1E8A109B6F1 /* DashboardSnapshotProviding.swift */; };
 		E39DA9E3D95791EC0AD4EFD9 /* TrendsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4351F56B547508B528428EBE /* TrendsViewModel.swift */; };
+		E8FCD50741E27C74BB07F35E /* LabAnalysisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23682F4F63B877DDE30B2804 /* LabAnalysisService.swift */; };
 		F3398F16153B739217635F18 /* UserBaseline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31695A1414490A5469256C85 /* UserBaseline.swift */; };
 		F4EF51E067303BFFA4E1AC5D /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF40CBA77ABBB01E5B65B7E4 /* TodayViewModel.swift */; };
 		F856C98CF6F4551DD2B34141 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4744484D73E7CD4CE14E2355 /* SettingsView.swift */; };
@@ -89,12 +93,13 @@
 		191E51888CDDEFABA1307F0E /* ShimmerModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerModifier.swift; sourceTree = "<group>"; };
 		1DEE6A25FEA42CA15C6A485A /* ScoreRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreRing.swift; sourceTree = "<group>"; };
 		1EBDE19C8905942ABC03E08C /* AIChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatView.swift; sourceTree = "<group>"; };
+		23682F4F63B877DDE30B2804 /* LabAnalysisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabAnalysisService.swift; sourceTree = "<group>"; };
 		298D23D1C84998154BC6F09A /* WellnessReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WellnessReport.swift; sourceTree = "<group>"; };
 		2A8925104C077CE53BCA1114 /* JournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalView.swift; sourceTree = "<group>"; };
 		2F4C44EA531E1688CA8F56D1 /* LabsPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabsPlaceholderView.swift; sourceTree = "<group>"; };
 		2F645195EB71665E7FF514C0 /* SomatiqAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SomatiqAppDelegate.swift; sourceTree = "<group>"; };
 		31695A1414490A5469256C85 /* UserBaseline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserBaseline.swift; sourceTree = "<group>"; };
-		33DCCA44345994E7F7D9BE17 /* BaselineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaselineService.swift; sourceTree = "<group>"; };
+		3334507CD2B183196412BCC1 /* LabAnalysisRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabAnalysisRecord.swift; sourceTree = "<group>"; };
 		341AC1D6AD3BFF3AF0E26758 /* TrendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendsView.swift; sourceTree = "<group>"; };
 		3640747F7FA4B961E70E97DC /* TrendsDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendsDataService.swift; sourceTree = "<group>"; };
 		39D1504676CBD035D6332E43 /* AIModelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIModelManager.swift; sourceTree = "<group>"; };
@@ -109,6 +114,7 @@
 		526465A621D0A53144923CF7 /* InsightGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightGenerator.swift; sourceTree = "<group>"; };
 		5C21C3BCF39CAA3A3CAFF99F /* AnalysesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysesView.swift; sourceTree = "<group>"; };
 		5FDE9AA73396C303B5716404 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
+		63A4E2C43F52C75009A744A0 /* LabAnalysisDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabAnalysisDetailView.swift; sourceTree = "<group>"; };
 		661436628CE42A05465BD0D5 /* Statistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Statistics.swift; sourceTree = "<group>"; };
 		694B49EDAB0799D7449E610B /* AIChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatService.swift; sourceTree = "<group>"; };
 		713A44A3A508BB17E9057E04 /* ScoreEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEngineTests.swift; sourceTree = "<group>"; };
@@ -145,13 +151,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-			3ABED4EA416B2114C81FAAE1 /* Frameworks */ = {
-				isa = PBXFrameworksBuildPhase;
-				buildActionMask = 2147483647;
-				files = (
-				);
-				runOnlyForDeploymentPostprocessing = 0;
-			};
+		3ABED4EA416B2114C81FAAE1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1EA2FE45E694EDC99C2879FC /* MLXLLM in Frameworks */,
+				2CA8A4A8D49EA4F1C5D7DCC4 /* MLXLMCommon in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -210,6 +218,7 @@
 				77F56C1915EAA6A175D5AC7B /* DailyScore.swift */,
 				DD1D8A5B82DD995E43392F1D /* EnergyReading.swift */,
 				4DBF4EF53108AB38362610DC /* HealthModels.swift */,
+				3334507CD2B183196412BCC1 /* LabAnalysisRecord.swift */,
 				31695A1414490A5469256C85 /* UserBaseline.swift */,
 				B409F8644121D3BB9ED5F5EE /* UserPreferences.swift */,
 				298D23D1C84998154BC6F09A /* WellnessReport.swift */,
@@ -249,6 +258,7 @@
 			isa = PBXGroup;
 			children = (
 				5C21C3BCF39CAA3A3CAFF99F /* AnalysesView.swift */,
+				63A4E2C43F52C75009A744A0 /* LabAnalysisDetailView.swift */,
 			);
 			path = Analyses;
 			sourceTree = "<group>";
@@ -292,11 +302,11 @@
 				F13B7500C46C1FD3A66F200C /* AIConversationStore.swift */,
 				72DEB56B4F2B161A6C4A1948 /* AIHealthContextService.swift */,
 				39D1504676CBD035D6332E43 /* AIModelManager.swift */,
-				33DCCA44345994E7F7D9BE17 /* BaselineService.swift */,
 				F9C89410A7A04B4D88E465DE /* DashboardDataService.swift */,
 				D097874DDCF3A1E8A109B6F1 /* DashboardSnapshotProviding.swift */,
 				04C0E2D2784B3AB4626BE989 /* HealthKitService.swift */,
 				526465A621D0A53144923CF7 /* InsightGenerator.swift */,
+				23682F4F63B877DDE30B2804 /* LabAnalysisService.swift */,
 				0A8C07C0901E9E06216FC4C3 /* ScoreEngine.swift */,
 				981677700FFBE263746153A2 /* SettingsDataService.swift */,
 				B1505AE4A9CF058E1D875F1B /* StorageService.swift */,
@@ -381,10 +391,12 @@
 			);
 			dependencies = (
 			);
-				name = Somatiq;
-				packageProductDependencies = (
-				);
-				productName = Somatiq;
+			name = Somatiq;
+			packageProductDependencies = (
+				7F2F48D5F59A7C51B16EEF29 /* MLXLLM */,
+				AB436832CFF8C5F71232EF40 /* MLXLMCommon */,
+			);
+			productName = Somatiq;
 			productReference = 01F0B75B2177635667F42AE0 /* Somatiq.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -414,6 +426,14 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					0322183A2FA989A2424F45AB = {
+						DevelopmentTeam = 8LNR79SMU8;
+					};
+					FFE62E4CAA9C8B8D466C7E50 = {
+						DevelopmentTeam = 8LNR79SMU8;
+					};
+				};
 			};
 			buildConfigurationList = 6078F2A7667D8AA089ED2A86 /* Build configuration list for PBXProject "Somatiq" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -457,7 +477,6 @@
 				61AB32F961D70289C3EA98D2 /* AppEvents.swift in Sources */,
 				1B9D887E951FDAEFE334B455 /* AppLog.swift in Sources */,
 				32550F3F6450C700CFAEF998 /* AppModelContainerFactory.swift in Sources */,
-				1E3F9E8EDC5ECB8B68C01AAE /* BaselineService.swift in Sources */,
 				6A0410FDAC2685841D77FF19 /* Color+Hex.swift in Sources */,
 				28C3E521F9981C07535D9245 /* DailyScore.swift in Sources */,
 				37E52250AD950A1A2BE66CA6 /* DashboardDataService.swift in Sources */,
@@ -472,6 +491,9 @@
 				4ABED74A7E5005E9A130C109 /* InsightCard.swift in Sources */,
 				8CDBE4D5067CA8E993FE83FF /* InsightGenerator.swift in Sources */,
 				0C19CB63002441C5F4283765 /* JournalView.swift in Sources */,
+				B1CC6ED710332EEF86ECB09E /* LabAnalysisDetailView.swift in Sources */,
+				13B00CC6F059E0A8B4D7B39E /* LabAnalysisRecord.swift in Sources */,
+				E8FCD50741E27C74BB07F35E /* LabAnalysisService.swift in Sources */,
 				083BD2795B2C114A17340934 /* LabsPlaceholderView.swift in Sources */,
 				89DE26A6B0AC7A7CC4BFCD51 /* MetricCard.swift in Sources */,
 				B17EB7F536F5A95590CA0743 /* MetricDetailView.swift in Sources */,
@@ -526,13 +548,13 @@
 /* Begin XCBuildConfiguration section */
 		421004D26090E305566D977C /* Debug */ = {
 			isa = XCBuildConfiguration;
-				buildSettings = {
-					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-					CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
-					CODE_SIGN_IDENTITY = "iPhone Developer";
-					DEVELOPMENT_TEAM = 8LNR79SMU8;
-					CURRENT_PROJECT_VERSION = 1;
-					INFOPLIST_FILE = Resources/Info.plist;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8LNR79SMU8;
+				INFOPLIST_FILE = Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -547,11 +569,11 @@
 		};
 		4AC6AF92DF82BA7A83D2201B /* Debug */ = {
 			isa = XCBuildConfiguration;
-				buildSettings = {
-					BUNDLE_LOADER = "$(TEST_HOST)";
-					DEVELOPMENT_TEAM = 8LNR79SMU8;
-					GENERATE_INFOPLIST_FILE = YES;
-					IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = 8LNR79SMU8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -566,11 +588,11 @@
 		};
 		5CDA121EB816A411F2731B7B /* Release */ = {
 			isa = XCBuildConfiguration;
-				buildSettings = {
-					BUNDLE_LOADER = "$(TEST_HOST)";
-					DEVELOPMENT_TEAM = 8LNR79SMU8;
-					GENERATE_INFOPLIST_FILE = YES;
-					IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = 8LNR79SMU8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -585,13 +607,13 @@
 		};
 		6B9BFEDF8E3D7EA3E23B4618 /* Release */ = {
 			isa = XCBuildConfiguration;
-				buildSettings = {
-					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-					CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
-					CODE_SIGN_IDENTITY = "iPhone Developer";
-					DEVELOPMENT_TEAM = 8LNR79SMU8;
-					CURRENT_PROJECT_VERSION = 1;
-					INFOPLIST_FILE = Resources/Info.plist;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Resources/Somatiq.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8LNR79SMU8;
+				INFOPLIST_FILE = Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

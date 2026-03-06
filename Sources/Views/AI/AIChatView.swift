@@ -4,6 +4,8 @@ struct AIChatView: View {
     @State private var viewModel: AIChatViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private let modelManager: AIModelManager
+
     @State private var showAnalyses = false
     @State private var isBottomVisible = true
     @State private var pendingNewMessages = 0
@@ -16,6 +18,7 @@ struct AIChatView: View {
         modelManager: AIModelManager,
         chatService: AIChatService
     ) {
+        self.modelManager = modelManager
         _viewModel = State(
             initialValue: AIChatViewModel(
                 store: conversationStore,
@@ -32,11 +35,6 @@ struct AIChatView: View {
 
             VStack(spacing: 12) {
                 header
-
-                if shouldShowSetupCard {
-                    setupCard
-                        .transition(.opacity.combined(with: .scale(scale: 0.99)))
-                }
 
                 messagesSection
 
@@ -79,7 +77,7 @@ struct AIChatView: View {
         }
         .sheet(isPresented: $showAnalyses) {
             NavigationStack {
-                AnalysesView()
+                AnalysesView(modelManager: modelManager)
                     .presentationBackground(SomatiqColor.bg)
             }
             .presentationBackground(SomatiqColor.bg)
@@ -89,9 +87,11 @@ struct AIChatView: View {
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("AI")
-                    .font(.system(size: 30, weight: .bold))
+                Text("Somatiq Personal AI")
+                    .font(.system(size: 28, weight: .bold))
                     .foregroundStyle(SomatiqColor.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
 
                 HStack(spacing: 6) {
                     Circle()
@@ -136,67 +136,6 @@ struct AIChatView: View {
             }
             .buttonStyle(.somatiqPressable)
         }
-    }
-
-    private var setupCard: some View {
-        GlassCard(tint: SomatiqColor.accent) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Set up on-device AI")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(SomatiqColor.textPrimary)
-
-                Text("Download \(viewModel.modelStatus.title) once. After setup, chat runs locally on your device.")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(SomatiqColor.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                if viewModel.modelStatus.phase == .downloading || viewModel.modelStatus.phase == .preparing {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ProgressView(value: viewModel.modelStatus.progress)
-                            .tint(SomatiqColor.accent)
-
-                        HStack {
-                            Text(viewModel.modelStatus.detail)
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(SomatiqColor.textTertiary)
-                            Spacer()
-                            Text("\(Int(viewModel.modelStatus.progress * 100))%")
-                                .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                                .foregroundStyle(SomatiqColor.textSecondary)
-                        }
-                    }
-                } else if let error = viewModel.modelStatus.errorText, !error.isEmpty {
-                    Text(error)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(SomatiqColor.warning)
-                }
-
-                HStack(spacing: 8) {
-                    Button {
-                        Task {
-                            if viewModel.modelStatus.phase == .downloading || viewModel.modelStatus.phase == .preparing {
-                                await viewModel.cancelModelPreparation()
-                            } else {
-                                await viewModel.prepareModel()
-                            }
-                        }
-                    } label: {
-                        Text(setupButtonTitle)
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(SomatiqColor.accent.opacity(0.85), in: Capsule())
-                    }
-                    .buttonStyle(.somatiqPressable)
-
-                    Text("Required only on first AI launch.")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(SomatiqColor.textMuted)
-                }
-            }
-        }
-        .animation(SomatiqAnimation.stateSwap, value: viewModel.modelStatus)
     }
 
     private var messagesSection: some View {
@@ -269,11 +208,15 @@ struct AIChatView: View {
 
     private var composer: some View {
         HStack(spacing: 10) {
-            TextField("Ask about your health trends...", text: $viewModel.draft, axis: .vertical)
+            TextField(composerPlaceholder, text: $viewModel.draft, axis: .vertical)
                 .lineLimit(1...4)
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(SomatiqColor.textPrimary)
                 .disabled(isComposerLocked)
+                .submitLabel(.send)
+                .onSubmit {
+                    Task { await viewModel.send() }
+                }
 
             Button {
                 if viewModel.isGenerating {
@@ -314,7 +257,7 @@ struct AIChatView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 14) {
             Image(systemName: "sparkles")
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundStyle(SomatiqColor.accent)
@@ -330,9 +273,90 @@ struct AIChatView: View {
                 .foregroundStyle(SomatiqColor.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
+
+            if shouldShowSetupCard {
+                inlineSetupPanel
+                    .padding(.horizontal, 12)
+                    .padding(.top, 2)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.bottom, 20)
+    }
+
+    private var inlineSetupPanel: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Set up on-device AI")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(SomatiqColor.textPrimary)
+
+            Text("Download \(viewModel.modelStatus.title) once. After setup, chat runs locally on your device.")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(SomatiqColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if viewModel.modelStatus.phase == .downloading || viewModel.modelStatus.phase == .preparing {
+                VStack(alignment: .leading, spacing: 6) {
+                    ProgressView(value: viewModel.modelStatus.progress)
+                        .tint(SomatiqColor.accent)
+
+                    HStack {
+                        Text(viewModel.modelStatus.detail)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(SomatiqColor.textTertiary)
+                        Spacer()
+                        Text("\(Int(viewModel.modelStatus.progress * 100))%")
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(SomatiqColor.textSecondary)
+                    }
+                }
+            } else if let error = viewModel.modelStatus.errorText, !error.isEmpty {
+                Text(error)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(SomatiqColor.warning)
+            }
+
+            HStack(spacing: 8) {
+                Button {
+                    Task {
+                        if viewModel.modelStatus.phase == .downloading || viewModel.modelStatus.phase == .preparing {
+                            await viewModel.cancelModelPreparation()
+                        } else {
+                            await viewModel.prepareModel()
+                        }
+                    }
+                } label: {
+                    Text(setupButtonTitle)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(SomatiqColor.accent.opacity(0.85), in: Capsule())
+                }
+                .buttonStyle(.somatiqPressable)
+
+                Text("Required only on first launch.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(SomatiqColor.textMuted)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "#1B1D2A"), Color(hex: "#10111A")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.white.opacity(0.12), lineWidth: 0.7)
+                )
+        )
+        .animation(SomatiqAnimation.stateSwap, value: viewModel.modelStatus)
     }
 
     private var shouldShowSetupCard: Bool {
@@ -400,6 +424,19 @@ struct AIChatView: View {
         }
 
         return isComposerLocked || viewModel.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var composerPlaceholder: String {
+        switch viewModel.modelStatus.phase {
+        case .ready:
+            return "Ask about your health trends..."
+        case .downloading, .preparing:
+            return "Preparing AI model..."
+        case .failed:
+            return "Retry model setup to continue chat."
+        case .notDownloaded:
+            return "Download model to start chatting."
+        }
     }
 }
 

@@ -40,7 +40,7 @@ struct RootTabView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack {
             Group {
                 switch selectedTab {
                 case .today:
@@ -62,10 +62,11 @@ struct RootTabView: View {
             .transition(screenTransition)
             .animation(SomatiqAnimation.screenSwitch, value: selectedTab)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            customTabBar
         }
-        .ignoresSafeArea(.keyboard)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            customTabBar
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+        }
         .fullScreenCover(isPresented: onboardingBinding) {
             OnboardingView(healthDataProvider: dependencies.healthDataProvider) {
                 onboardingComplete = true

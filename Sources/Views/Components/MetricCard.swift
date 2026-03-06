@@ -244,8 +244,8 @@ struct MetricCard: View {
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 30, height: 30)
-                .offset(x: -10, y: -11)
+                .frame(width: 20, height: 20)
+                .offset(x: -7, y: -8)
 
             metricIcon
                 .foregroundStyle(Color.white.opacity(0.96))

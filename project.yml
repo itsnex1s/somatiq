@@ -23,6 +23,7 @@ targets:
       - Resources
     settings:
       base:
+        DEVELOPMENT_TEAM: 8LNR79SMU8
         PRODUCT_BUNDLE_IDENTIFIER: com.bioself.somatiq
         INFOPLIST_FILE: Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: Resources/Somatiq.entitlements
@@ -47,5 +48,6 @@ targets:
       - Tests/SomatiqTests
     settings:
       base:
+        DEVELOPMENT_TEAM: 8LNR79SMU8
         PRODUCT_BUNDLE_IDENTIFIER: com.bioself.somatiq.tests
         GENERATE_INFOPLIST_FILE: YES
