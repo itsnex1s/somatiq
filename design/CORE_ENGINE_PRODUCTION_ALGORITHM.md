@@ -791,12 +791,11 @@ LLM должен:
 
 ## 13) Интеграция в текущие модули Somatiq
 
-- `HealthKitService` → measurement‑level данные + source metadata.
-- `DashboardDataService` → перестроить с “daily aggregate first” на pipeline `Context -> Quality -> Features -> Scores`.
-- `BaselineService` → `w7/w28/w60` + bins + sourceGroup.
-- `ScoreEngine` → robust baseline formulas + winsorization + gating.
-- `StorageService` + SwiftData schema → добавить `MeasurementRecord`, `DerivedFeatureDaily`, `ScoreSnapshot`.
-- `WellnessReportService` → триггеры на events и confidence.
+- `HealthKitService` → measurement‑level данные + source metadata + source ranking.
+- `DashboardDataService` → pipeline `HealthKit -> ScoreEngine -> WellnessReport -> Storage`.
+- `ScoreEngine` → baseline inline (w7/w28/w60) + robust z‑score formulas + confidence‑gated publishing.
+- `StorageService` + SwiftData schema → `DailyScore` (с `heartScore`, `scoreConfidence`, `qualityReason`), `WellnessReport`, `UserBaseline`.
+- `WellnessReportService` → триггеры на score deltas и confidence gate (≥ 0.80).
 
 ---
 

@@ -1,35 +1,34 @@
 # Somatiq
 
-**Know your body. Own your data.**  
-Private iOS wellness app that computes daily **Stress**, **Sleep**, and **Energy** scores from Apple Health data.
+**Know your body. Own your data.**
+Private iOS wellness app that computes daily **Stress**, **Sleep**, **Energy**, and **Heart** scores from Apple Health data. On-device AI insights via local LLM.
 
 ---
 
-## What is implemented (MVP)
+## What is implemented
 
 - Native SwiftUI app (iOS 17+)
-- 4 tabs: `Today`, `Trends`, `Labs (Coming in v3)`, `Settings`
+- 4 tabs: `Today`, `Trends`, `AI Chat`, `Settings`
 - HealthKit read-only integration:
-  - HRV (SDNN)
+  - HRV (SDNN + RMSSD from heartbeat series)
   - Heart rate / resting heart rate
-  - Sleep analysis
-  - Active energy
-  - Steps
+  - Sleep analysis (stages, efficiency, bedtime)
+  - Active energy + steps + workouts
+  - Source ranking and purity tracking
 - SwiftData persistence (fully on-device)
-- Refactored service orchestration layer:
-  - `DashboardDataService` (Today pipeline + snapshot)
-  - `TrendsDataService` (history loading by period)
-  - `SettingsDataService` (preferences + Health reconnect)
-- App-level dependency container: `AppDependencies` (single composition root for screens/services)
-- Score engine:
-  - Stress score `0...100`
-  - Sleep score `0...100`
-  - Energy score `0...100`
+- Robust scoring engine with baseline-relative z-scores:
+  - Stress score `0...100` (rest-window HRV + HR)
+  - Sleep score `0...100` (duration, efficiency, regularity, physio recovery)
+  - Body Battery score `0...100` (sleep charge - activity/stress drain)
+  - Heart score `0...100` (HRV + RHR resilience proxy)
+- Confidence-gated score publishing with smooth delta clamping
+- Wellness reports with trigger detection (stress spike, battery low, HRV drop, etc.)
+- On-device AI chat (Qwen 3.5 via MLX Swift)
+- Lab analysis (PDF upload + on-device evaluation)
 - Onboarding + Health permissions flow
-- Background refresh recalculation pipeline (shared with foreground path)
+- Background refresh recalculation pipeline
 - Interactive Trends inspector (tap/drag on charts)
-- Unified error mapping + retry states + local-only logging
-- Haptics polish (ring progress + tab switch)
+- Unified error mapping + local-only logging
 - Unit and service-layer integration tests
 
 ---
@@ -41,6 +40,7 @@ Private iOS wellness app that computes daily **Stress**, **Sleep**, and **Energy
 - `HealthKit` (health data source)
 - `Swift Charts` (trends visualization)
 - `Observation` (`@Observable` ViewModels)
+- `MLX Swift LM` (on-device LLM inference — MLXLLM, MLXLMCommon)
 - `XcodeGen` (project generation from `project.yml`)
 
 ---
@@ -48,7 +48,7 @@ Private iOS wellness app that computes daily **Stress**, **Sleep**, and **Energy
 ## Requirements
 
 1. macOS with Xcode installed
-2. **iOS runtime/platform installed in Xcode Components**  
+2. **iOS runtime/platform installed in Xcode Components**
    (`Xcode → Settings → Components`)
 3. Xcode Command Line Tools
 4. Homebrew (for `xcodegen`)
@@ -101,7 +101,7 @@ xcodebuild -project Somatiq.xcodeproj -scheme Somatiq -showdestinations
 xcodebuild -project Somatiq.xcodeproj -scheme Somatiq -destination "platform=iOS Simulator,name=iPhone 16 Pro" test
 ```
 
-> If this fails with “device not found” or “iOS platform is not installed”, install the iOS runtime in Xcode Components and re-run.
+> If this fails with "device not found" or "iOS platform is not installed", install the iOS runtime in Xcode Components and re-run.
 
 ---
 
@@ -132,18 +132,16 @@ Simulator HealthKit data is limited and often unsuitable for full validation.
 ```text
 Somatiq/
 ├── Sources/
-│   ├── App/                 # App entry, root tabs, app delegate
-│   ├── Models/              # SwiftData models + health DTOs
-│   ├── Services/            # HealthKit, orchestration, storage, baseline, scoring
-│   ├── ViewModels/          # Thin UI state (Today/Trends/Settings)
-│   ├── Views/               # Screens and reusable UI components
-│   ├── Design/              # Theme tokens
-│   └── Utilities/           # Date, statistics, color helpers
-├── Tests/SomatiqTests/      # Unit tests
-├── Resources/               # Info.plist, entitlements
-├── backlog/                 # MVP backlog (epics/stories/tasks)
-├── design/                  # Full design specification
-├── release/                 # Privacy, disclaimer, App Store docs
+│   ├── App/                 # SomatiqApp, RootTabView, AppDependencies, AppDelegate
+│   ├── Models/              # SwiftData models (DailyScore, WellnessReport, etc.) + health DTOs
+│   ├── Services/            # HealthKit, ScoreEngine, DashboardDataService, AI, Storage
+│   ├── ViewModels/          # @Observable VMs (Today, Trends, Settings, AIChat)
+│   ├── Views/               # Screens (Today, Trends, AI, Settings, Analyses, Onboarding) + Components
+│   ├── Design/              # Theme tokens (colors, gradients, spacing)
+│   └── Utilities/           # Statistics, Date+Extensions, AppLog, AppErrorMapper
+├── Tests/SomatiqTests/      # Unit + integration tests
+├── Resources/               # Info.plist, entitlements, assets
+├── design/                  # Core engine algorithm specification
 ├── project.yml              # XcodeGen project definition
 └── Somatiq.xcodeproj        # Generated project
 ```
@@ -154,10 +152,12 @@ Somatiq/
 
 ```text
 TodayViewModel -> DashboardDataService
-               -> HealthKitService + ScoreEngine + BaselineService + StorageService
+               -> HealthKitService + ScoreEngine + InsightGenerator + StorageService
+               -> WellnessReportService
                -> DashboardSnapshot -> SwiftUI
 
 TrendsViewModel -> TrendsDataService -> StorageService -> SwiftUI
+AIChatViewModel -> AIChatService -> AIModelManager (MLX) + AIHealthContextService -> SwiftUI
 SettingsViewModel -> SettingsDataService -> StorageService/HealthKitService -> SwiftUI
 
 SomatiqApp -> AppModelContainerFactory -> AppDependencies -> RootTabView
@@ -166,26 +166,18 @@ SomatiqAppDelegate -> AppModelContainerFactory -> DashboardDataService (backgrou
 
 ---
 
-## Important docs in this repo
+## Documentation
 
-- Product roadmap: `FEATURES.md`
-- Implementation details: `IMPLEMENTATION.md`
-- MVP backlog with priorities/sprints: `backlog/MVP_BACKLOG.md`
-- Full design specification: `design/MVP_DESIGN_SPEC.md`
-- Release docs:
-  - `release/PRIVACY_POLICY.md`
-  - `release/MEDICAL_DISCLAIMER.md`
-  - `release/APP_STORE_LISTING.md`
-  - `release/SUBMIT_CHECKLIST.md`
-  - `release/SCREENSHOT_GUIDE.md`
-  - `release/TESTFLIGHT_ROLLOUT.md`
+- Architecture and implementation: `IMPLEMENTATION.md`
+- Core engine algorithm specification: `design/CORE_ENGINE_PRODUCTION_ALGORITHM.md`
 
 ---
 
 ## Privacy and medical notice
 
 - Somatiq is local-first and read-only for HealthKit.
-- No account and no telemetry are implemented in MVP.
+- AI runs fully on-device — no health data sent to cloud.
+- No account and no telemetry.
 - App provides wellness insights and is **not** a medical device.
 
 ---
@@ -210,12 +202,3 @@ Install iOS runtime:
 ### Trends screen is empty
 
 You need at least a few days of saved `DailyScore` entries.
-
----
-
-## Next recommended steps
-
-1. Install missing iOS runtime (if needed)
-2. Run tests
-3. Validate with real Apple Watch data (7+ days)
-4. Complete TestFlight + App Store steps from `release/SUBMIT_CHECKLIST.md`
