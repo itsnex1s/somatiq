@@ -15,7 +15,14 @@ struct SomatiqApp: App {
             sharedContainer = container
             dependencies = AppDependencies(modelContext: container.mainContext)
         } catch {
-            fatalError("Unable to initialize app dependencies: \(error)")
+            AppLog.error("SomatiqApp.init.makeContainer", error: error)
+            do {
+                let memoryContainer = try AppModelContainerFactory.makeContainer(isStoredInMemoryOnly: true)
+                sharedContainer = memoryContainer
+                dependencies = AppDependencies(modelContext: memoryContainer.mainContext)
+            } catch {
+                fatalError("Unable to initialize app dependencies: \(error)")
+            }
         }
     }
 

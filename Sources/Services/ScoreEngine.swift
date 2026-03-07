@@ -118,11 +118,9 @@ struct ScoreEngine {
 
         var qualityReasons = input.qualityNotes
         qualityReasons.append(contentsOf: physiologicalQualityReasons(nightHRV: nightHRVValue, nightlyRHR: nightlyRHR))
-        qualityReasons = Array(Set(qualityReasons)).sorted()
 
         let gateState = evaluateGates(input: input, nightHRVSampleCount: nightHRVSample == nil ? 0 : 1, priorReasons: qualityReasons)
         qualityReasons.append(contentsOf: gateState.reasons)
-        qualityReasons = Array(Set(qualityReasons)).sorted()
 
         let baselineMaturity = Statistics.clamped(Double(baseline.validNightCount) / 14, min: 0, max: 1)
         let coverageScore = gateState.coverageScore
@@ -141,7 +139,6 @@ struct ScoreEngine {
             confidence = min(confidence, 0.65)
             qualityReasons.append("calibration_mode")
         }
-        qualityReasons = Array(Set(qualityReasons)).sorted()
 
         let zNightHRV = robustZ(
             lnNightHRV,
@@ -198,8 +195,15 @@ struct ScoreEngine {
         let publishedStress = publishScore(raw: rawStress, previous: previousStress, confidence: confidence)
         let publishedBattery = publishScore(raw: rawBattery, previous: previousBattery, confidence: confidence)
         let publishedHeart = publishScore(raw: rawHeart, previous: previousHeart, confidence: confidence)
-
-        let publishedSleep = publishScore(raw: rawSleep, previous: previousSleep, confidence: confidence)
+        let hasSleepForCurrentNight = input.sleep.totalSleepMinutes > 0
+        let publishedSleep: Int
+        if hasSleepForCurrentNight {
+            publishedSleep = publishScore(raw: rawSleep, previous: previousSleep, confidence: confidence)
+        } else {
+            publishedSleep = 0
+            qualityReasons.append("sleep_missing_today")
+        }
+        qualityReasons = Array(Set(qualityReasons)).sorted()
 
         let stressResult = StressResult(score: publishedStress, level: stressLevel(for: publishedStress))
         let sleepResult = SleepResult(score: publishedSleep, level: sleepLevel(for: publishedSleep))
@@ -325,6 +329,9 @@ struct ScoreEngine {
         currentMidpoint: Double?
     ) -> Double {
         let durationHours = input.sleep.totalSleepMinutes / 60
+        guard durationHours > 0 else {
+            return 0
+        }
         let targetDuration = Statistics.clamped(baseline.durationMedian28Hours, min: 6, max: 9)
         let durationScore = clip01(1 - abs(durationHours - targetDuration) / 3)
         let efficiencyScore = clip01((input.sleep.efficiency - 0.70) / 0.25)

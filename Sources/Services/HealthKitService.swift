@@ -169,6 +169,7 @@ final class HealthKitService: HealthDataProviding, @unchecked Sendable {
         }
         if sleep.totalSleepMinutes <= 0 {
             qualityNotes.append("insufficient_sleep_duration")
+            qualityNotes.append("no_watch_sleep_data")
         }
         if restWindows.count < 3 {
             qualityNotes.append("insufficient_rest_windows")
@@ -260,31 +261,18 @@ final class HealthKitService: HealthDataProviding, @unchecked Sendable {
         let asleepSamples = samples
             .filter { asleepValues.contains($0.value) }
             .sorted { $0.startDate < $1.startDate }
+        let watchAsleepSamples = asleepSamples.filter { sourceRank(for: $0) == 3 }
 
-        guard !asleepSamples.isEmpty else {
-            return SleepData(
-                segments: [],
-                inBedStart: nil,
-                inBedEnd: nil,
-                totalSleepMinutes: 0,
-                deepMinutes: 0,
-                remMinutes: 0,
-                coreMinutes: 0,
-                awakeMinutes: 0,
-                efficiency: 0,
-                bedtime: nil,
-                stageCoverage: 0,
-                sourcePurity: 0,
-                interruptionsCount: 0
-            )
+        guard !watchAsleepSamples.isEmpty else {
+            return emptySleepData()
         }
 
         let mergeGap: TimeInterval = 20 * 60
         var episodes: [TimeRange] = []
-        var currentStart = asleepSamples[0].startDate
-        var currentEnd = asleepSamples[0].endDate
+        var currentStart = watchAsleepSamples[0].startDate
+        var currentEnd = watchAsleepSamples[0].endDate
 
-        for sample in asleepSamples.dropFirst() {
+        for sample in watchAsleepSamples.dropFirst() {
             if sample.startDate.timeIntervalSince(currentEnd) <= mergeGap {
                 currentEnd = max(currentEnd, sample.endDate)
             } else {
@@ -300,7 +288,9 @@ final class HealthKitService: HealthDataProviding, @unchecked Sendable {
         } ?? TimeRange(start: currentStart, end: currentEnd)
 
         let episodeSamples = samples.filter { sample in
-            sample.startDate < mainEpisode.end && sample.endDate > mainEpisode.start
+            sample.startDate < mainEpisode.end &&
+                sample.endDate > mainEpisode.start &&
+                sourceRank(for: sample) == 3
         }
 
         var segments: [SleepSegment] = []
@@ -797,5 +787,23 @@ final class HealthKitService: HealthDataProviding, @unchecked Sendable {
         normalized.second = 0
         normalized.nanosecond = 0
         return calendar.date(from: normalized) ?? date
+    }
+
+    private func emptySleepData() -> SleepData {
+        SleepData(
+            segments: [],
+            inBedStart: nil,
+            inBedEnd: nil,
+            totalSleepMinutes: 0,
+            deepMinutes: 0,
+            remMinutes: 0,
+            coreMinutes: 0,
+            awakeMinutes: 0,
+            efficiency: 0,
+            bedtime: nil,
+            stageCoverage: 0,
+            sourcePurity: 0,
+            interruptionsCount: 0
+        )
     }
 }

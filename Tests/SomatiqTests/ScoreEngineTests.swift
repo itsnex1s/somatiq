@@ -103,6 +103,51 @@ final class ScoreEngineTests: XCTestCase {
         XCTAssertEqual(baseline.durationMedian28Hours, 7.9, accuracy: 0.2)
     }
 
+    func testComputeDoesNotCarrySleepWhenNoCurrentNightSleep() {
+        let baseline = engine.buildBaseline(from: makeHistory(days: 28, hrv: 46, rhr: 60, sleepHours: 7.4))
+        let previous = DailyScore(
+            date: Date().addingTimeInterval(-86_400),
+            stressScore: 44,
+            sleepScore: 79,
+            bodyBatteryScore: 72,
+            stressLevel: StressLevel.moderate.rawValue,
+            sleepLevel: SleepLevel.good.rawValue,
+            bodyBatteryLevel: BatteryLevel.good.rawValue,
+            sleepDurationMin: 440,
+            sleepEfficiency: 0.9,
+            deepSleepMin: 95,
+            remSleepMin: 98,
+            coreSleepMin: 247,
+            bedtimeAt: Date().addingTimeInterval(-9 * 3_600),
+            avgSDNN: 46,
+            restingHR: 60,
+            activeCalories: 420,
+            steps: 8_200,
+            insightText: "prev",
+            scoreConfidence: 0.82,
+            qualityReason: "stable"
+        )
+
+        let input = makeInput(
+            sleepHours: 0,
+            efficiency: 0,
+            hrv: 42,
+            nightHR: [57, 56, 58, 55],
+            restWindows: [
+                RestWindowSample(timestamp: Date(), heartRate: 63, lnHRV: log(40), sourceRank: 3),
+                RestWindowSample(timestamp: Date().addingTimeInterval(-1_800), heartRate: 64, lnHRV: log(39), sourceRank: 3),
+                RestWindowSample(timestamp: Date().addingTimeInterval(-3_600), heartRate: 62, lnHRV: log(41), sourceRank: 3),
+            ],
+            activeEnergy: 350,
+            steps: 6_700
+        )
+
+        let result = engine.compute(input: input, baseline: baseline, previousPublished: previous)
+
+        XCTAssertEqual(result.sleep.score, 0)
+        XCTAssertTrue(result.qualityReasons.contains("sleep_missing_today"))
+    }
+
     private func makeInput(
         sleepHours: Double,
         efficiency: Double,
@@ -130,7 +175,7 @@ final class ScoreEngineTests: XCTestCase {
             awakeMinutes: max((1 - efficiency) * totalMinutes, 0),
             efficiency: efficiency,
             bedtime: start,
-            stageCoverage: 0.82,
+            stageCoverage: totalMinutes > 0 ? 0.82 : 0,
             sourcePurity: 0.95,
             interruptionsCount: 2
         )

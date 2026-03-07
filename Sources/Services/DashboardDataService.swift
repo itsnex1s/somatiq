@@ -121,7 +121,7 @@ final class DashboardDataService: DashboardSnapshotProviding {
         let baseline = scoreEngine.buildBaseline(from: history)
 
         let previousToday = try storage.fetchDailyScore(on: Date())
-        let sleepLocked = shouldLockSleep(previousToday: previousToday)
+        let sleepLocked = shouldLockSleep(previousToday: previousToday, rawInput: rawInput)
         let input = sleepLocked
             ? applyLockedSleep(rawInput: rawInput, previousToday: previousToday)
             : rawInput
@@ -215,9 +215,20 @@ final class DashboardDataService: DashboardSnapshotProviding {
         Date().timeIntervalSince(cached.updatedAt) >= dynamicRefreshInterval
     }
 
-    private func shouldLockSleep(previousToday: DailyScore?) -> Bool {
+    private func shouldLockSleep(previousToday: DailyScore?, rawInput: DailyHealthInput) -> Bool {
         guard let previousToday else { return false }
-        return previousToday.sleepDurationMin > 0
+        guard previousToday.sleepDurationMin > 0 else { return false }
+        guard rawInput.sleep.totalSleepMinutes > 0 else { return false }
+
+        let reason = previousToday.qualityReason ?? ""
+        if reason.contains("insufficient_sleep_duration")
+            || reason.contains("no_watch_sleep_data")
+            || reason.contains("sleep_missing_today")
+        {
+            return false
+        }
+
+        return (previousToday.scoreConfidence ?? 0) >= 0.4
     }
 
     private func applyLockedSleep(rawInput: DailyHealthInput, previousToday: DailyScore?) -> DailyHealthInput {

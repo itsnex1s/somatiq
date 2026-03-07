@@ -278,7 +278,7 @@ struct MetricCard: View {
     }
 
     private var valueText: String {
-        if kind == .heart && value == 0 {
+        if (kind == .heart || kind == .sleep) && value == 0 {
             return "--"
         }
         return "\(value)"
@@ -305,7 +305,7 @@ struct MetricCard: View {
             case .strong: return "Recovered"
             case .balanced: return "Okay"
             case .caution, .critical: return "Sleep debt"
-            case .unknown: return "No data"
+            case .unknown: return "No watch data"
             }
         case .heart:
             switch metricState {
@@ -338,7 +338,7 @@ struct MetricCard: View {
             case .strong: return "Recovery trend looks strong."
             case .balanced: return "Recovery is acceptable today."
             case .caution, .critical: return "Aim for +30–60 min sleep tonight."
-            case .unknown: return "Need more real data."
+            case .unknown: return "No Apple Watch sleep data today."
             }
         case .heart:
             switch metricState {
